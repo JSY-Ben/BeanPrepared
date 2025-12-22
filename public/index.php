@@ -1,6 +1,6 @@
 <?php
 
-require __DIR__ . '/../lib/db.php';
+require __DIR__ . '/../backend/lib/db.php';
 
 $stmt = db()->query('SELECT events.id, events.title, events.description, events.starts_at, notification_types.name AS type_name FROM events JOIN notification_types ON events.notification_type_id = notification_types.id ORDER BY events.starts_at');
 $events = $stmt->fetchAll();

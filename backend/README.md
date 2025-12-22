@@ -28,8 +28,8 @@ View submitted events in your browser:
 
 ## Web Frontend
 Public site mirrors the app for upcoming events and submissions:
-- `http://localhost:8080/site/index.php`
-- `http://localhost:8080/site/submit.php`
+- `http://localhost:8080/public/index.php`
+- `http://localhost:8080/public/submit.php`
 
 ## Notes
 - Store all timestamps in UTC.

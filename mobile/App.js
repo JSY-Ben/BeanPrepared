@@ -40,34 +40,9 @@ const LEAD_TIMES = [
 
 const STORAGE_KEY = "ontherock.preferences.v1";
 const Tab = createBottomTabNavigator();
-const API_BASE_URL = "http://localhost:8080";
+const API_BASE_URL = "https://bookit.highlands.ac.uk/Web/ontherock";
 
-const MOCK_EVENTS = [
-  {
-    id: "evt-1",
-    title: "Sunday Service",
-    startsAt: "2025-01-05T10:00:00Z",
-    type: "events",
-  },
-  {
-    id: "evt-2",
-    title: "Community Lunch",
-    startsAt: "2025-01-05T13:00:00Z",
-    type: "general",
-  },
-  {
-    id: "evt-3",
-    title: "Youth Gathering",
-    startsAt: "2025-01-08T18:30:00Z",
-    type: "events",
-  },
-  {
-    id: "evt-4",
-    title: "Volunteer Kickoff",
-    startsAt: "2025-01-10T19:00:00Z",
-    type: "announcements",
-  },
-];
+const EVENT_API_PATH = "/api/events";
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -87,6 +62,8 @@ export default function App() {
   const [eventView, setEventView] = useState("list");
   const [selectedDate, setSelectedDate] = useState(null);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [events, setEvents] = useState([]);
+  const [eventsStatus, setEventsStatus] = useState("idle");
   const [submitForm, setSubmitForm] = useState({
     name: "",
     email: "",
@@ -100,10 +77,10 @@ export default function App() {
 
   const filteredEvents = useMemo(() => {
     const typeSet = selectedTypes.size > 0 ? selectedTypes : null;
-    return MOCK_EVENTS.filter((event) =>
+    return events.filter((event) =>
       typeSet ? typeSet.has(event.type) : true
     ).sort((a, b) => new Date(a.startsAt) - new Date(b.startsAt));
-  }, [selectedTypes]);
+  }, [events, selectedTypes]);
 
   const eventsByDate = useMemo(() => {
     const map = new Map();
@@ -171,6 +148,40 @@ export default function App() {
 
     save();
   }, [isLoaded, selectedTypes, selectedLeads]);
+
+  useEffect(() => {
+    let isActive = true;
+    const loadEvents = async () => {
+      try {
+        setEventsStatus("loading");
+        const response = await fetch(`${API_BASE_URL}${EVENT_API_PATH}`);
+        if (!response.ok) {
+          throw new Error("Failed to load events");
+        }
+        const payload = await response.json();
+        const mapped = (payload.data || []).map((event) => ({
+          id: String(event.id),
+          title: event.title,
+          description: event.description,
+          startsAt: event.starts_at,
+          type: event.type_slug,
+        }));
+        if (isActive) {
+          setEvents(mapped);
+          setEventsStatus("loaded");
+        }
+      } catch (error) {
+        if (isActive) {
+          setEventsStatus("error");
+        }
+      }
+    };
+
+    loadEvents();
+    return () => {
+      isActive = false;
+    };
+  }, []);
 
   const toggleType = (id) => {
     setSelectedTypes((prev) => {
@@ -345,6 +356,7 @@ export default function App() {
                 selectedDate={selectedDate}
                 setSelectedDate={setSelectedDate}
                 eventsByDate={eventsByDate}
+                eventsStatus={eventsStatus}
               />
             )}
           </Tab.Screen>
@@ -387,6 +399,7 @@ function MainScreen({
   selectedDate,
   setSelectedDate,
   eventsByDate,
+  eventsStatus,
 }) {
   const selectedEvents = selectedDate ? eventsByDate.get(selectedDate) || [] : [];
   const header = (
@@ -470,7 +483,13 @@ function MainScreen({
                   })
                 : "Select a date"}
             </Text>
-            {selectedEvents.length === 0 ? (
+            {eventsStatus === "loading" ? (
+              <Text style={styles.emptyText}>Loading events...</Text>
+            ) : eventsStatus === "error" ? (
+              <Text style={styles.emptyText}>
+                Unable to load events right now.
+              </Text>
+            ) : selectedEvents.length === 0 ? (
               <Text style={styles.emptyText}>
                 No events scheduled for this date.
               </Text>
@@ -498,7 +517,19 @@ function MainScreen({
       <ScrollView contentContainerStyle={styles.content}>
         {header}
 
-        {filteredEvents.length === 0 ? (
+        {eventsStatus === "loading" ? (
+          <View style={styles.emptyState}>
+            <Text style={styles.emptyTitle}>Loading events</Text>
+            <Text style={styles.emptyText}>Fetching the latest schedule.</Text>
+          </View>
+        ) : eventsStatus === "error" ? (
+          <View style={styles.emptyState}>
+            <Text style={styles.emptyTitle}>Unable to load events</Text>
+            <Text style={styles.emptyText}>
+              Please check your connection and try again.
+            </Text>
+          </View>
+        ) : filteredEvents.length === 0 ? (
           <View style={styles.emptyState}>
             <Text style={styles.emptyTitle}>No events yet</Text>
             <Text style={styles.emptyText}>
