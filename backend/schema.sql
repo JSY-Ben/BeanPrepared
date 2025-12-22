@@ -53,6 +53,8 @@ CREATE TABLE event_submissions (
   phone VARCHAR(40) DEFAULT NULL,
   starts_at DATETIME NOT NULL,
   is_organizer TINYINT(1) NOT NULL DEFAULT 0,
+  status ENUM('pending','approved','rejected') NOT NULL DEFAULT 'pending',
+  admin_notes TEXT DEFAULT NULL,
   description TEXT NOT NULL,
   website VARCHAR(255) DEFAULT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP

@@ -46,7 +46,7 @@ try {
     }
 
     if ($method === 'GET' && $path === '/api/event-submissions') {
-        $stmt = db()->query('SELECT id, name, email, phone, starts_at, is_organizer, description, website, created_at FROM event_submissions ORDER BY created_at DESC');
+        $stmt = db()->query('SELECT id, name, email, phone, starts_at, is_organizer, status, admin_notes, description, website, created_at FROM event_submissions ORDER BY created_at DESC');
         json_response(200, ['data' => $stmt->fetchAll()]);
     }
 
@@ -176,8 +176,8 @@ try {
         }
 
         $stmt = db()->prepare(
-            'INSERT INTO event_submissions (name, email, phone, starts_at, is_organizer, description, website)
-             VALUES (:name, :email, :phone, :starts_at, :is_organizer, :description, :website)'
+            'INSERT INTO event_submissions (name, email, phone, starts_at, is_organizer, status, admin_notes, description, website)
+             VALUES (:name, :email, :phone, :starts_at, :is_organizer, :status, :admin_notes, :description, :website)'
         );
         $stmt->execute([
             ':name' => $name,
@@ -185,6 +185,8 @@ try {
             ':phone' => $phone ?: null,
             ':starts_at' => $startsAt,
             ':is_organizer' => $isOrganizer ? 1 : 0,
+            ':status' => 'pending',
+            ':admin_notes' => null,
             ':description' => $description,
             ':website' => $website ?: null,
         ]);
