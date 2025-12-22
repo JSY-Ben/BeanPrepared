@@ -24,7 +24,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { Calendar } from "react-native-calendars";
 import DateTimePicker from "@react-native-community/datetimepicker";
 
-const NOTIFICATION_TYPES = [
+const DEFAULT_NOTIFICATION_TYPES = [
   { id: "general", label: "General Updates" },
   { id: "events", label: "Event Alerts" },
   { id: "announcements", label: "Announcements" },
@@ -58,6 +58,10 @@ export default function App() {
   const colorScheme = useColorScheme();
   const theme = getTheme(colorScheme);
   const styles = getStyles(theme);
+  const [notificationTypes, setNotificationTypes] = useState(
+    DEFAULT_NOTIFICATION_TYPES
+  );
+  const [typesStatus, setTypesStatus] = useState("idle");
   const [selectedTypes, setSelectedTypes] = useState(new Set());
   const [selectedLeads, setSelectedLeads] = useState(new Set());
   const [eventView, setEventView] = useState("list");
@@ -205,15 +209,36 @@ export default function App() {
     }
   }, []);
 
+  const loadNotificationTypes = useCallback(async () => {
+    try {
+      setTypesStatus("loading");
+      const response = await fetch(`${API_BASE_URL}/api/notification-types`);
+      if (!response.ok) {
+        throw new Error("Failed to load types");
+      }
+      const payload = await response.json();
+      const mapped = (payload.data || []).map((type) => ({
+        id: type.slug,
+        label: type.name,
+      }));
+      setNotificationTypes(mapped);
+      setTypesStatus("loaded");
+    } catch (error) {
+      setTypesStatus("error");
+      setNotificationTypes(DEFAULT_NOTIFICATION_TYPES);
+    }
+  }, []);
+
   useEffect(() => {
     loadEvents();
-  }, [loadEvents]);
+    loadNotificationTypes();
+  }, [loadEvents, loadNotificationTypes]);
 
   const handleRefresh = useCallback(async () => {
     setIsRefreshing(true);
-    await loadEvents();
+    await Promise.all([loadEvents(), loadNotificationTypes()]);
     setIsRefreshing(false);
-  }, [loadEvents]);
+  }, [loadEvents, loadNotificationTypes]);
 
   const toggleType = (id) => {
     setSelectedTypes((prev) => {
@@ -401,6 +426,8 @@ export default function App() {
                   isRefreshing={isRefreshing}
                   handleRefresh={handleRefresh}
                   selectedTypes={selectedTypes}
+                  notificationTypes={notificationTypes}
+                  typesStatus={typesStatus}
                   viewTypeFilter={viewTypeFilter}
                   selectViewType={selectViewType}
                   viewDateWindow={viewDateWindow}
@@ -423,6 +450,8 @@ export default function App() {
             {() => (
               <SettingsScreen
                 styles={styles}
+                notificationTypes={notificationTypes}
+                typesStatus={typesStatus}
                 selectedTypes={selectedTypes}
                 selectedLeads={selectedLeads}
                 toggleType={toggleType}
@@ -452,6 +481,8 @@ function MainScreen({
   isRefreshing,
   handleRefresh,
   selectedTypes,
+  notificationTypes,
+  typesStatus,
   viewTypeFilter,
   selectViewType,
   viewDateWindow,
@@ -516,9 +547,11 @@ function MainScreen({
             All
           </Text>
         </Pressable>
-        {NOTIFICATION_TYPES.filter((type) =>
-          selectedTypes.size > 0 ? selectedTypes.has(type.id) : true
-        ).map((type) => {
+        {notificationTypes
+          .filter((type) =>
+            selectedTypes.size > 0 ? selectedTypes.has(type.id) : true
+          )
+          .map((type) => {
           const isActive = viewTypeFilter === type.id;
           return (
             <Pressable
@@ -732,6 +765,8 @@ function MainScreen({
 
 function SettingsScreen({
   styles,
+  notificationTypes,
+  typesStatus,
   selectedTypes,
   selectedLeads,
   toggleType,
@@ -749,15 +784,23 @@ function SettingsScreen({
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Notification Types</Text>
-          {NOTIFICATION_TYPES.map((type) => (
-            <View key={type.id} style={styles.row}>
-              <Text style={styles.label}>{type.label}</Text>
-              <Switch
-                value={selectedTypes.has(type.id)}
-                onValueChange={() => toggleType(type.id)}
-              />
-            </View>
-          ))}
+          {typesStatus === "loading" ? (
+            <Text style={styles.emptyText}>Loading types...</Text>
+          ) : typesStatus === "error" ? (
+            <Text style={styles.emptyText}>
+              Unable to load types right now.
+            </Text>
+          ) : (
+            notificationTypes.map((type) => (
+              <View key={type.id} style={styles.row}>
+                <Text style={styles.label}>{type.label}</Text>
+                <Switch
+                  value={selectedTypes.has(type.id)}
+                  onValueChange={() => toggleType(type.id)}
+                />
+              </View>
+            ))
+          )}
         </View>
 
         <View style={styles.section}>

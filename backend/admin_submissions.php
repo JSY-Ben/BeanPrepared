@@ -68,6 +68,7 @@ function h(string $value): string
       <div class="navbar-nav">
         <a class="nav-link active" href="/Web/ontherock/backend/admin_submissions.php">Submissions</a>
         <a class="nav-link" href="/Web/ontherock/backend/admin_events.php">Events</a>
+        <a class="nav-link" href="/Web/ontherock/backend/admin_types.php">Event Types</a>
       </div>
     </div>
   </nav>
