@@ -49,125 +49,47 @@ function h(string $value): string
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>OnTheRock Admin - Event Submissions</title>
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+    integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
+    crossorigin="anonymous"
+  >
   <style>
-    :root {
-      color-scheme: light dark;
-    }
     body {
-      margin: 0;
-      font-family: "Georgia", "Times New Roman", serif;
       background: #f7f4ee;
-      color: #2e2a24;
-    }
-    header {
-      padding: 32px 24px 16px;
-    }
-    h1 {
-      margin: 0;
-      font-size: 28px;
-    }
-    p {
-      margin: 6px 0 0;
-      color: #6a6256;
-    }
-    main {
-      padding: 0 24px 40px;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      background: #ffffff;
-      border-radius: 12px;
-      overflow: hidden;
-      box-shadow: 0 12px 24px rgba(0, 0, 0, 0.06);
-    }
-    th, td {
-      padding: 14px 16px;
-      border-bottom: 1px solid #efeae0;
-      text-align: left;
-      vertical-align: top;
-      font-size: 14px;
-    }
-    th {
-      background: #f6f0dd;
-      font-weight: 600;
-    }
-    tr:last-child td {
-      border-bottom: none;
-    }
-    .tag {
-      display: inline-block;
-      padding: 4px 10px;
-      border-radius: 999px;
-      background: #f6f0dd;
-      font-size: 12px;
-      color: #7a5a00;
-    }
-    .muted {
-      color: #6a6256;
-      font-size: 12px;
-    }
-    .empty {
-      padding: 24px;
-      background: #ffffff;
-      border-radius: 12px;
-      text-align: center;
-      color: #6a6256;
-    }
-    .filters a {
-      margin-right: 10px;
-      text-decoration: none;
-      color: #7a5a00;
-      font-weight: 600;
-    }
-    .filters .active {
-      color: #2e2a24;
-    }
-    .notes {
-      width: 100%;
-      min-height: 80px;
-      border-radius: 10px;
-      border: 1px solid #efeae0;
-      padding: 8px;
-      font-family: inherit;
-      font-size: 13px;
-    }
-    .status-select {
-      padding: 6px 8px;
-      border-radius: 8px;
-      border: 1px solid #efeae0;
-      font-size: 13px;
-      margin-bottom: 8px;
-    }
-    .save-btn {
-      background: #c9a227;
-      color: #1f1a12;
-      border: none;
-      padding: 6px 12px;
-      border-radius: 999px;
-      font-weight: 600;
-      cursor: pointer;
-      font-size: 12px;
     }
   </style>
 </head>
 <body>
-  <header>
-    <h1>Event Submissions</h1>
-    <p><?php echo count($submissions); ?> submissions</p>
-    <div class="filters">
-      <a class="<?php echo $statusFilter === 'all' ? 'active' : ''; ?>" href="?status=all">All</a>
-      <a class="<?php echo $statusFilter === 'pending' ? 'active' : ''; ?>" href="?status=pending">Pending</a>
-      <a class="<?php echo $statusFilter === 'approved' ? 'active' : ''; ?>" href="?status=approved">Approved</a>
-      <a class="<?php echo $statusFilter === 'rejected' ? 'active' : ''; ?>" href="?status=rejected">Rejected</a>
+  <nav class="navbar navbar-expand-lg bg-body-tertiary border-bottom">
+    <div class="container">
+      <a class="navbar-brand fw-semibold" href="/Web/ontherock/backend/admin_events.php">OnTheRock Admin</a>
+      <div class="navbar-nav">
+        <a class="nav-link active" href="/Web/ontherock/backend/admin_submissions.php">Submissions</a>
+        <a class="nav-link" href="/Web/ontherock/backend/admin_events.php">Events</a>
+      </div>
     </div>
-  </header>
-  <main>
+  </nav>
+  <main class="container py-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-3">
+      <div>
+        <h1 class="h4 mb-1">Event Submissions</h1>
+        <p class="text-muted mb-0"><?php echo count($submissions); ?> submissions</p>
+      </div>
+      <div class="btn-group flex-wrap" role="group" aria-label="Filter submissions">
+        <a class="btn btn-sm <?php echo $statusFilter === 'all' ? 'btn-warning' : 'btn-outline-warning'; ?>" href="?status=all">All</a>
+        <a class="btn btn-sm <?php echo $statusFilter === 'pending' ? 'btn-warning' : 'btn-outline-warning'; ?>" href="?status=pending">Pending</a>
+        <a class="btn btn-sm <?php echo $statusFilter === 'approved' ? 'btn-warning' : 'btn-outline-warning'; ?>" href="?status=approved">Approved</a>
+        <a class="btn btn-sm <?php echo $statusFilter === 'rejected' ? 'btn-warning' : 'btn-outline-warning'; ?>" href="?status=rejected">Rejected</a>
+      </div>
+    </div>
     <?php if (count($submissions) === 0): ?>
-      <div class="empty">No submissions yet.</div>
+      <div class="alert alert-secondary">No submissions yet.</div>
     <?php else: ?>
-      <table>
-        <thead>
+      <div class="table-responsive">
+        <table class="table table-sm align-middle table-bordered bg-white shadow-sm">
+          <thead class="table-light">
           <tr>
             <th>Submitted</th>
             <th>Name</th>
@@ -178,24 +100,24 @@ function h(string $value): string
             <th>Website</th>
             <th>Status / Notes</th>
           </tr>
-        </thead>
-        <tbody>
+          </thead>
+          <tbody>
           <?php foreach ($submissions as $submission): ?>
             <tr>
               <td>
                 <div><?php echo h($submission['created_at']); ?></div>
-                <div class="muted">ID: <?php echo h((string) $submission['id']); ?></div>
+                <div class="text-muted small">ID: <?php echo h((string) $submission['id']); ?></div>
               </td>
               <td><?php echo h($submission['name']); ?></td>
               <td>
                 <div><?php echo h($submission['email']); ?></div>
                 <?php if (!empty($submission['phone'])): ?>
-                  <div class="muted"><?php echo h($submission['phone']); ?></div>
+                  <div class="text-muted small"><?php echo h($submission['phone']); ?></div>
                 <?php endif; ?>
               </td>
               <td><?php echo h($submission['starts_at']); ?></td>
               <td>
-                <span class="tag">
+                <span class="badge text-bg-warning">
                   <?php echo $submission['is_organizer'] ? 'Yes' : 'No'; ?>
                 </span>
               </td>
@@ -206,25 +128,26 @@ function h(string $value): string
                     <?php echo h($submission['website']); ?>
                   </a>
                 <?php else: ?>
-                  <span class="muted">N/A</span>
+                  <span class="text-muted small">N/A</span>
                 <?php endif; ?>
               </td>
               <td>
                 <form method="post">
                   <input type="hidden" name="id" value="<?php echo h((string) $submission['id']); ?>">
-                  <select class="status-select" name="status">
+                  <select class="form-select form-select-sm mb-2" name="status">
                     <option value="pending" <?php echo $submission['status'] === 'pending' ? 'selected' : ''; ?>>Pending</option>
                     <option value="approved" <?php echo $submission['status'] === 'approved' ? 'selected' : ''; ?>>Approved</option>
                     <option value="rejected" <?php echo $submission['status'] === 'rejected' ? 'selected' : ''; ?>>Rejected</option>
                   </select>
-                  <textarea class="notes" name="admin_notes" placeholder="Admin notes"><?php echo h($submission['admin_notes'] ?? ''); ?></textarea>
-                  <button class="save-btn" type="submit">Save</button>
+                  <textarea class="form-control form-control-sm mb-2" name="admin_notes" rows="3" placeholder="Admin notes"><?php echo h($submission['admin_notes'] ?? ''); ?></textarea>
+                  <button class="btn btn-sm btn-warning fw-semibold" type="submit">Save</button>
                 </form>
               </td>
             </tr>
           <?php endforeach; ?>
-        </tbody>
-      </table>
+          </tbody>
+        </table>
+      </div>
     <?php endif; ?>
   </main>
 </body>
