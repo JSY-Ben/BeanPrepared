@@ -1,7 +1,7 @@
 RewriteEngine On
 
 # Ensure mod_rewrite treats this as a subfolder app
-RewriteBase /Web/ontherock/
+RewriteBase /Web/beanprepared/
 
 # Route API requests to the backend router
 RewriteRule ^api/?(.*)$ backend/index.php [L,QSA]

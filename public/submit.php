@@ -44,7 +44,7 @@ function h(string $value): string
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>OnTheRock - Submit Event</title>
+  <title>BeanPrepared - Submit Event</title>
   <link
     href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
     rel="stylesheet"
@@ -56,7 +56,7 @@ function h(string $value): string
 <body>
   <nav class="navbar navbar-expand-lg bg-body-tertiary border-bottom">
     <div class="container">
-      <a class="navbar-brand fw-semibold" href="index.php">OnTheRock</a>
+      <a class="navbar-brand fw-semibold" href="index.php">BeanPrepared</a>
       <div class="navbar-nav">
         <a class="nav-link" href="index.php">Upcoming Events</a>
         <a class="nav-link active" href="submit.php">Submit Event</a>
@@ -66,7 +66,7 @@ function h(string $value): string
   <main class="container py-4">
     <div class="mb-4">
       <h1 class="mb-1">Submit Event</h1>
-      <p class="brand-subtitle">Share a new event request for OnTheRock.</p>
+      <p class="brand-subtitle">Share a new event request for BeanPrepared.</p>
     </div>
     <?php if ($success): ?>
       <div class="alert alert-success">Thanks! Your event has been submitted for review.</div>

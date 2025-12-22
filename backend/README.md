@@ -1,8 +1,8 @@
-# OnTheRock Backend (PHP/MySQL)
+# BeanPrepared Backend (PHP/MySQL)
 
 ## Setup
-1. Create a MySQL database named `ontherock`.
-2. Apply the schema: `mysql -u root -p ontherock < schema.sql`
+1. Create a MySQL database named `beanprepared`.
+2. Apply the schema: `mysql -u root -p beanprepared < schema.sql`
 3. Set environment variables for DB + OneSignal:
    - `DB_HOST`, `DB_NAME`, `DB_USER`, `DB_PASS`
    - `ONESIGNAL_APP_ID_IOS`, `ONESIGNAL_APP_ID_ANDROID`, `ONESIGNAL_REST_API_KEY`

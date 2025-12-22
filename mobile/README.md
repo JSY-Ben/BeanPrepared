@@ -1,4 +1,4 @@
-# OnTheRock Mobile (Expo)
+# BeanPrepared Mobile (Expo)
 
 ## Setup
 1. Install Node.js (>= 18).

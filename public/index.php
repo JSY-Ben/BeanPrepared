@@ -73,7 +73,7 @@ function format_datetime(string $value): string
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>OnTheRock - Upcoming Events</title>
+  <title>BeanPrepared - Upcoming Events</title>
   <link
     href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
     rel="stylesheet"
@@ -85,7 +85,7 @@ function format_datetime(string $value): string
 <body>
   <nav class="navbar navbar-expand-lg bg-body-tertiary border-bottom">
     <div class="container">
-      <a class="navbar-brand fw-semibold" href="index.php">OnTheRock</a>
+      <a class="navbar-brand fw-semibold" href="index.php">BeanPrepared</a>
       <div class="navbar-nav">
         <a class="nav-link active" href="index.php">Upcoming Events</a>
         <a class="nav-link" href="submit.php">Submit Event</a>
@@ -95,7 +95,7 @@ function format_datetime(string $value): string
   <main class="container py-4">
     <div class="mb-4">
       <h1 class="mb-1">Upcoming Events</h1>
-      <p class="brand-subtitle">Events curated from the OnTheRock schedule.</p>
+      <p class="brand-subtitle">Events curated from the BeanPrepared schedule.</p>
     </div>
     <div class="mb-4 section-card">
       <div class="section-header">Filter by event type</div>

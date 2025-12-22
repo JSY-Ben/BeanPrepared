@@ -82,7 +82,7 @@ $events = $pdo->query('SELECT events.id, events.title, events.description, event
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>OnTheRock Admin - Events</title>
+  <title>BeanPrepared Admin - Events</title>
   <link
     href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
     rel="stylesheet"
@@ -94,11 +94,11 @@ $events = $pdo->query('SELECT events.id, events.title, events.description, event
 <body>
   <nav class="navbar navbar-expand-lg bg-body-tertiary border-bottom">
     <div class="container">
-      <a class="navbar-brand fw-semibold" href="/Web/ontherock/backend/admin_events.php">OnTheRock Admin</a>
+      <a class="navbar-brand fw-semibold" href="/Web/beanprepared/backend/admin_events.php">BeanPrepared Admin</a>
       <div class="navbar-nav">
-        <a class="nav-link" href="/Web/ontherock/backend/admin_submissions.php">Submissions</a>
-        <a class="nav-link active" href="/Web/ontherock/backend/admin_events.php">Events</a>
-        <a class="nav-link" href="/Web/ontherock/backend/admin_types.php">Event Types</a>
+        <a class="nav-link" href="/Web/beanprepared/backend/admin_submissions.php">Submissions</a>
+        <a class="nav-link active" href="/Web/beanprepared/backend/admin_events.php">Events</a>
+        <a class="nav-link" href="/Web/beanprepared/backend/admin_types.php">Event Types</a>
       </div>
     </div>
   </nav>

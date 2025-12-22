@@ -40,11 +40,11 @@ const LEAD_TIMES = [
   { id: "10080", label: "7 days before" },
 ];
 
-const STORAGE_KEY = "ontherock.preferences.v1";
+const STORAGE_KEY = "beanprepared.preferences.v1";
 const Tab = createBottomTabNavigator();
-const API_BASE_URL = "https://bookit.highlands.ac.uk/Web/ontherock";
+const API_BASE_URL = "https://bookit.highlands.ac.uk/Web/beanprepared";
 const ONESIGNAL_APP_ID = "";
-const EXTERNAL_USER_KEY = "ontherock.externalUserId.v1";
+const EXTERNAL_USER_KEY = "beanprepared.externalUserId.v1";
 
 const EVENT_API_PATH = "/api/events";
 
@@ -333,7 +333,7 @@ export default function App() {
 
     await Notifications.scheduleNotificationAsync({
       content: {
-        title: "OnTheRock Test",
+        title: "BeanPrepared Test",
         body: "This is a local test notification.",
       },
       trigger: { seconds: 10 },
@@ -536,7 +536,7 @@ function MainScreen({
   const selectedEvents = selectedDate ? eventsByDate.get(selectedDate) || [] : [];
   const header = (
     <View style={eventView === "calendar" ? styles.calendarHeader : styles.header}>
-      <Text style={styles.title}>OnTheRock</Text>
+      <Text style={styles.title}>BeanPrepared</Text>
       <Text style={styles.subtitle}>
         Upcoming events curated for your notification choices.
       </Text>

@@ -1,17 +1,17 @@
 {
   "expo": {
-    "name": "OnTheRock",
-    "slug": "ontherock",
+    "name": "BeanPrepared",
+    "slug": "beanprepared",
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
     "assetBundlePatterns": ["**/*"],
     "ios": {
-      "bundleIdentifier": "com.ontherock.app",
+      "bundleIdentifier": "com.beanprepared.app",
       "supportsTablet": true
     },
     "android": {
-      "package": "com.ontherock.app"
+      "package": "com.beanprepared.app"
     }
   }
 }

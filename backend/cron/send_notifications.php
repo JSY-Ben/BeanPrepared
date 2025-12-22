@@ -60,7 +60,7 @@ foreach ($leads as $leadMinutes) {
         $payload = [
             'app_id' => $config['onesignal']['app_id_android'],
             'include_external_user_ids' => $users,
-            'headings' => ['en' => 'OnTheRock'],
+            'headings' => ['en' => 'BeanPrepared'],
             'contents' => ['en' => $event['title'] . ' starts soon.'],
             'data' => [
                 'event_id' => $event['id'],
