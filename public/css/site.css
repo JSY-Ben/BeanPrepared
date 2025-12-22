@@ -83,6 +83,52 @@ body {
   gap: 8px;
 }
 
+.search-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #ffffff;
+  border-radius: 16px;
+  border: 1px solid var(--otr-border);
+  padding: 10px 14px;
+  box-shadow: 0 12px 30px rgba(30, 143, 165, 0.12);
+}
+
+.search-box .form-control {
+  border: none;
+  padding: 0;
+  box-shadow: none;
+  background: transparent;
+}
+
+.search-icon {
+  font-size: 16px;
+}
+
+.event-card {
+  border: 1px solid rgba(30, 143, 165, 0.2);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(223, 241, 245, 0.35) 100%);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.event-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 40px rgba(30, 143, 165, 0.2);
+}
+
+.event-meta {
+  font-weight: 600;
+  color: var(--otr-muted);
+}
+
+.event-title {
+  font-size: 1.1rem;
+}
+
+.event-description {
+  color: #364a57;
+}
+
 .calendar-dot {
   width: 10px;
   height: 10px;

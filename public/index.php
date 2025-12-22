@@ -97,7 +97,7 @@ function format_datetime(string $value): string
       <h1 class="mb-1">Upcoming Events</h1>
       <p class="brand-subtitle">Events curated from the OnTheRock schedule.</p>
     </div>
-    <div class="mb-4 filter-bar">
+    <div class="mb-3 filter-bar">
       <div class="filter-group" aria-label="Filter events">
         <a class="btn btn-sm <?php echo $typeFilter === 'all' ? 'btn-warning' : 'btn-outline-warning'; ?>" href="index.php">All</a>
         <?php foreach ($types as $type): ?>
@@ -105,6 +105,18 @@ function format_datetime(string $value): string
             <?php echo h($type['name']); ?>
           </a>
         <?php endforeach; ?>
+      </div>
+    </div>
+    <div class="mb-4">
+      <div class="search-box">
+        <span class="search-icon">🔍</span>
+        <input
+          id="eventSearch"
+          class="form-control"
+          type="search"
+          placeholder="Search events by title or description"
+          aria-label="Search events"
+        >
       </div>
     </div>
     <div class="d-flex align-items-center justify-content-between mb-3">
@@ -133,18 +145,18 @@ function format_datetime(string $value): string
             <?php endforeach; ?>
           </div>
         </div>
-        <div class="row g-3">
+        <div class="row g-3" id="eventCards">
           <?php foreach ($events as $event): ?>
             <div class="col-12 col-lg-8">
-              <article class="card shadow-sm">
+              <article class="card shadow-sm event-card" data-title="<?php echo h(strtolower($event['title'])); ?>" data-description="<?php echo h(strtolower($event['description'] ?? '')); ?>">
                 <div class="card-body">
-                  <div class="text-muted small mb-2"><?php echo h(format_datetime($event['starts_at'])); ?></div>
-                  <h2 class="h5 mb-2">
+                  <div class="event-meta"><?php echo h(format_datetime($event['starts_at'])); ?></div>
+                  <h2 class="h5 mb-2 event-title">
                     <?php echo h($event['title']); ?>
                     <span class="badge text-bg-warning ms-2"><?php echo h($event['type_name']); ?></span>
                   </h2>
                   <?php if (!empty($event['description'])): ?>
-                    <p class="mb-0"><?php echo nl2br(h($event['description'])); ?></p>
+                    <p class="mb-0 event-description"><?php echo nl2br(h($event['description'])); ?></p>
                   <?php else: ?>
                     <p class="mb-0 text-muted">No description provided.</p>
                   <?php endif; ?>
@@ -153,6 +165,7 @@ function format_datetime(string $value): string
             </div>
           <?php endforeach; ?>
         </div>
+        <div class="alert alert-secondary mt-3 d-none" id="noResults">No matching events.</div>
       </div>
 
       <div id="calendarView" class="d-none">
@@ -196,6 +209,9 @@ function format_datetime(string $value): string
     const listView = document.getElementById('listView');
     const calendarView = document.getElementById('calendarView');
     const dateFilters = document.getElementById('dateFilters');
+    const eventSearch = document.getElementById('eventSearch');
+    const eventCards = document.getElementById('eventCards');
+    const noResults = document.getElementById('noResults');
     const monthTitle = document.getElementById('monthTitle');
     const calendarGrid = document.getElementById('calendarGrid');
     const selectedDateTitle = document.getElementById('selectedDateTitle');
@@ -211,6 +227,7 @@ function format_datetime(string $value): string
             'description' => $event['description'],
             'starts_at' => $event['starts_at'],
             'type_name' => $event['type_name'],
+            'type_slug' => $event['type_slug'],
         ];
     }, $events)); ?>;
 
@@ -326,6 +343,25 @@ function format_datetime(string $value): string
         renderCalendar();
       });
     }
+
+    if (eventSearch) {
+      eventSearch.addEventListener('input', applySearchFilter);
+    }
   </script>
 </body>
 </html>
+    function applySearchFilter() {
+      if (!eventCards) return;
+      const query = eventSearch ? eventSearch.value.trim().toLowerCase() : '';
+      let visible = 0;
+      eventCards.querySelectorAll('.event-card').forEach((card) => {
+        const title = card.dataset.title || '';
+        const description = card.dataset.description || '';
+        const matches = title.includes(query) || description.includes(query);
+        card.closest('.col-12').classList.toggle('d-none', !matches);
+        if (matches) visible += 1;
+      });
+      if (noResults) {
+        noResults.classList.toggle('d-none', visible > 0);
+      }
+    }
