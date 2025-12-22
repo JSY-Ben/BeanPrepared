@@ -128,30 +128,204 @@ function format_datetime(string $value): string
         <?php endforeach; ?>
       </div>
     </div>
+    <div class="d-flex align-items-center justify-content-between mb-3">
+      <div class="btn-group" role="group" aria-label="View switch">
+        <button class="btn btn-sm btn-warning" id="viewListBtn" type="button">List</button>
+        <button class="btn btn-sm btn-outline-warning" id="viewCalendarBtn" type="button">Calendar</button>
+      </div>
+      <div class="text-muted small" id="calendarMonthLabel"></div>
+    </div>
+
     <?php if (count($events) === 0): ?>
       <div class="alert alert-secondary">No events have been published yet.</div>
     <?php else: ?>
-      <div class="row g-3">
-        <?php foreach ($events as $event): ?>
-          <div class="col-12 col-lg-8">
-            <article class="card shadow-sm">
-              <div class="card-body">
-                <div class="text-muted small mb-2"><?php echo h(format_datetime($event['starts_at'])); ?></div>
-                <h2 class="h5 mb-2">
-                  <?php echo h($event['title']); ?>
-                  <span class="badge text-bg-warning ms-2"><?php echo h($event['type_name']); ?></span>
-                </h2>
-                <?php if (!empty($event['description'])): ?>
-                  <p class="mb-0"><?php echo nl2br(h($event['description'])); ?></p>
-                <?php else: ?>
-                  <p class="mb-0 text-muted">No description provided.</p>
-                <?php endif; ?>
-              </div>
-            </article>
+      <div id="listView">
+        <div class="row g-3">
+          <?php foreach ($events as $event): ?>
+            <div class="col-12 col-lg-8">
+              <article class="card shadow-sm">
+                <div class="card-body">
+                  <div class="text-muted small mb-2"><?php echo h(format_datetime($event['starts_at'])); ?></div>
+                  <h2 class="h5 mb-2">
+                    <?php echo h($event['title']); ?>
+                    <span class="badge text-bg-warning ms-2"><?php echo h($event['type_name']); ?></span>
+                  </h2>
+                  <?php if (!empty($event['description'])): ?>
+                    <p class="mb-0"><?php echo nl2br(h($event['description'])); ?></p>
+                  <?php else: ?>
+                    <p class="mb-0 text-muted">No description provided.</p>
+                  <?php endif; ?>
+                </div>
+              </article>
+            </div>
+          <?php endforeach; ?>
+        </div>
+      </div>
+
+      <div id="calendarView" class="d-none">
+        <div class="card shadow-sm mb-3">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <button class="btn btn-sm btn-outline-warning" id="prevMonthBtn" type="button">Prev</button>
+              <div class="fw-semibold" id="monthTitle"></div>
+              <button class="btn btn-sm btn-outline-warning" id="nextMonthBtn" type="button">Next</button>
+            </div>
+            <div class="table-responsive">
+              <table class="table table-bordered text-center align-middle mb-0">
+                <thead class="table-light">
+                  <tr>
+                    <th>Mon</th>
+                    <th>Tue</th>
+                    <th>Wed</th>
+                    <th>Thu</th>
+                    <th>Fri</th>
+                    <th>Sat</th>
+                    <th>Sun</th>
+                  </tr>
+                </thead>
+                <tbody id="calendarGrid"></tbody>
+              </table>
+            </div>
           </div>
-        <?php endforeach; ?>
+        </div>
+        <div class="card shadow-sm">
+          <div class="card-body">
+            <h5 class="card-title" id="selectedDateTitle">Select a date</h5>
+            <div id="selectedDateEvents" class="text-muted">No events for this date.</div>
+          </div>
+        </div>
       </div>
     <?php endif; ?>
   </main>
+  <script>
+    const listBtn = document.getElementById('viewListBtn');
+    const calendarBtn = document.getElementById('viewCalendarBtn');
+    const listView = document.getElementById('listView');
+    const calendarView = document.getElementById('calendarView');
+    const monthTitle = document.getElementById('monthTitle');
+    const calendarGrid = document.getElementById('calendarGrid');
+    const selectedDateTitle = document.getElementById('selectedDateTitle');
+    const selectedDateEvents = document.getElementById('selectedDateEvents');
+    const calendarMonthLabel = document.getElementById('calendarMonthLabel');
+    const prevBtn = document.getElementById('prevMonthBtn');
+    const nextBtn = document.getElementById('nextMonthBtn');
+
+    const events = <?php echo json_encode(array_map(static function ($event) {
+        return [
+            'id' => $event['id'],
+            'title' => $event['title'],
+            'description' => $event['description'],
+            'starts_at' => $event['starts_at'],
+            'type_name' => $event['type_name'],
+        ];
+    }, $events)); ?>;
+
+    const eventsByDate = events.reduce((acc, event) => {
+      const key = event.starts_at.slice(0, 10);
+      acc[key] = acc[key] || [];
+      acc[key].push(event);
+      return acc;
+    }, {});
+
+    let current = new Date();
+    current.setDate(1);
+    let selectedDate = null;
+
+    function formatDateLabel(date) {
+      return date.toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' });
+    }
+
+    function renderEventsForDate(dateKey) {
+      selectedDate = dateKey;
+      if (!dateKey) {
+        selectedDateTitle.textContent = 'Select a date';
+        selectedDateEvents.textContent = 'No events for this date.';
+        return;
+      }
+      selectedDateTitle.textContent = formatDateLabel(new Date(dateKey));
+      const items = eventsByDate[dateKey] || [];
+      if (items.length === 0) {
+        selectedDateEvents.textContent = 'No events for this date.';
+        return;
+      }
+      selectedDateEvents.innerHTML = items.map((event) => {
+        const time = new Date(event.starts_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        const description = event.description ? `<div class="text-muted small">${event.description}</div>` : '';
+        return `<div class="mb-2"><div class="fw-semibold">${event.title} <span class="badge text-bg-warning">${event.type_name}</span></div><div class="small text-muted">${time}</div>${description}</div>`;
+      }).join('');
+    }
+
+    function renderCalendar() {
+      const year = current.getFullYear();
+      const month = current.getMonth();
+      const firstDay = new Date(year, month, 1);
+      const lastDay = new Date(year, month + 1, 0);
+      const startOffset = (firstDay.getDay() + 6) % 7;
+
+      monthTitle.textContent = current.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
+      calendarMonthLabel.textContent = monthTitle.textContent;
+
+      let html = '';
+      let day = 1 - startOffset;
+      for (let week = 0; week < 6; week += 1) {
+        html += '<tr>';
+        for (let i = 0; i < 7; i += 1) {
+          const cellDate = new Date(year, month, day);
+          const dateKey = cellDate.toISOString().slice(0, 10);
+          const isCurrentMonth = cellDate.getMonth() === month;
+          const hasEvents = Boolean(eventsByDate[dateKey]);
+          const isSelected = selectedDate === dateKey;
+          html += `<td class="${isCurrentMonth ? '' : 'text-muted bg-light'} ${isSelected ? 'table-warning' : ''}" data-date="${dateKey}">${cellDate.getDate()}${hasEvents ? '<div class="text-warning">•</div>' : ''}</td>`;
+          day += 1;
+        }
+        html += '</tr>';
+      }
+      calendarGrid.innerHTML = html;
+    }
+
+    function switchView(mode) {
+      if (mode === 'calendar') {
+        listView.classList.add('d-none');
+        calendarView.classList.remove('d-none');
+        listBtn.classList.remove('btn-warning');
+        listBtn.classList.add('btn-outline-warning');
+        calendarBtn.classList.add('btn-warning');
+        calendarBtn.classList.remove('btn-outline-warning');
+        renderCalendar();
+      } else {
+        calendarView.classList.add('d-none');
+        listView.classList.remove('d-none');
+        listBtn.classList.add('btn-warning');
+        listBtn.classList.remove('btn-outline-warning');
+        calendarBtn.classList.remove('btn-warning');
+        calendarBtn.classList.add('btn-outline-warning');
+      }
+    }
+
+    if (listBtn && calendarBtn) {
+      listBtn.addEventListener('click', () => switchView('list'));
+      calendarBtn.addEventListener('click', () => switchView('calendar'));
+    }
+
+    if (prevBtn && nextBtn) {
+      prevBtn.addEventListener('click', () => {
+        current.setMonth(current.getMonth() - 1);
+        renderCalendar();
+      });
+      nextBtn.addEventListener('click', () => {
+        current.setMonth(current.getMonth() + 1);
+        renderCalendar();
+      });
+    }
+
+    if (calendarGrid) {
+      calendarGrid.addEventListener('click', (event) => {
+        const target = event.target.closest('td[data-date]');
+        if (!target) return;
+        renderEventsForDate(target.dataset.date);
+        renderCalendar();
+      });
+    }
+  </script>
 </body>
 </html>
