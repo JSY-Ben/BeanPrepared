@@ -50,7 +50,7 @@ try {
     }
 
     if ($method === 'GET' && $path === '/api/event-submissions') {
-        $stmt = db()->query('SELECT id, name, email, phone, starts_at, ends_at, is_organizer, contact_consent, status, admin_notes, description, website, created_at FROM event_submissions ORDER BY created_at DESC');
+        $stmt = db()->query('SELECT id, name, email, phone, starts_at, ends_at, is_organizer, contact_consent, is_one_off, repeat_interval, repeat_unit, repeat_until, status, admin_notes, description, website, created_at FROM event_submissions ORDER BY created_at DESC');
         json_response(200, ['data' => $stmt->fetchAll()]);
     }
 
@@ -174,19 +174,32 @@ try {
         $endsAt = trim($input['ends_at'] ?? '');
         $isOrganizer = $input['is_organizer'] ?? null;
         $contactConsent = $input['contact_consent'] ?? null;
+        $isOneOff = $input['is_one_off'] ?? null;
+        $repeatInterval = isset($input['repeat_interval']) ? (int) $input['repeat_interval'] : null;
+        $repeatUnit = trim($input['repeat_unit'] ?? '');
+        $repeatUntil = trim($input['repeat_until'] ?? '');
         $description = trim($input['description'] ?? '');
         $website = trim($input['website'] ?? '');
 
-        if ($name === '' || $email === '' || $startsAt === '' || $endsAt === '' || $description === '' || !is_bool($isOrganizer)) {
-            json_response(422, ['error' => 'name, email, starts_at, ends_at, description, and is_organizer are required']);
+        if ($name === '' || $email === '' || $startsAt === '' || $endsAt === '' || $description === '' || !is_bool($isOrganizer) || !is_bool($isOneOff)) {
+            json_response(422, ['error' => 'name, email, starts_at, ends_at, description, is_organizer, and is_one_off are required']);
+        }
+        if (strtotime($endsAt) <= strtotime($startsAt)) {
+            json_response(422, ['error' => 'ends_at must be after starts_at']);
         }
         if ($isOrganizer && !is_bool($contactConsent)) {
             json_response(422, ['error' => 'contact_consent is required when organizer is yes']);
         }
+        if (!$isOneOff) {
+            $validUnits = ['daily', 'weekly', 'monthly'];
+            if ($repeatInterval === null || $repeatInterval < 1 || $repeatUnit === '' || !in_array($repeatUnit, $validUnits, true) || $repeatUntil === '') {
+                json_response(422, ['error' => 'repeat_interval, repeat_unit, and repeat_until are required for repeating events']);
+            }
+        }
 
         $stmt = db()->prepare(
-            'INSERT INTO event_submissions (name, email, phone, starts_at, ends_at, is_organizer, contact_consent, status, admin_notes, description, website)
-             VALUES (:name, :email, :phone, :starts_at, :ends_at, :is_organizer, :contact_consent, :status, :admin_notes, :description, :website)'
+            'INSERT INTO event_submissions (name, email, phone, starts_at, ends_at, is_organizer, contact_consent, is_one_off, repeat_interval, repeat_unit, repeat_until, status, admin_notes, description, website)
+             VALUES (:name, :email, :phone, :starts_at, :ends_at, :is_organizer, :contact_consent, :is_one_off, :repeat_interval, :repeat_unit, :repeat_until, :status, :admin_notes, :description, :website)'
         );
         $stmt->execute([
             ':name' => $name,
@@ -196,6 +209,10 @@ try {
             ':ends_at' => $endsAt,
             ':is_organizer' => $isOrganizer ? 1 : 0,
             ':contact_consent' => $contactConsent === null ? null : ($contactConsent ? 1 : 0),
+            ':is_one_off' => $isOneOff ? 1 : 0,
+            ':repeat_interval' => $isOneOff ? null : $repeatInterval,
+            ':repeat_unit' => $isOneOff ? null : $repeatUnit,
+            ':repeat_until' => $isOneOff ? null : $repeatUntil,
             ':status' => 'pending',
             ':admin_notes' => null,
             ':description' => $description,

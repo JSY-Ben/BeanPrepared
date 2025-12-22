@@ -101,6 +101,10 @@ export default function App() {
     endsAt: null,
     isOrganizer: null,
     contactConsent: null,
+    isOneOff: null,
+    repeatInterval: "",
+    repeatUnit: "",
+    repeatUntil: "",
     description: "",
     website: "",
   });
@@ -405,6 +409,17 @@ export default function App() {
       Alert.alert("Missing info", "Please answer the contact consent question.");
       return;
     }
+    if (submitForm.isOneOff === null) {
+      Alert.alert("Missing info", "Please answer the one-off question.");
+      return;
+    }
+    if (submitForm.isOneOff === false) {
+      const interval = Number.parseInt(submitForm.repeatInterval, 10);
+      if (!interval || !submitForm.repeatUnit || !submitForm.repeatUntil) {
+        Alert.alert("Missing info", "Please complete the repeat schedule.");
+        return;
+      }
+    }
 
     try {
       setSubmitStatus("submitting");
@@ -421,6 +436,12 @@ export default function App() {
           contact_consent: submitForm.isOrganizer
             ? submitForm.contactConsent
             : null,
+          is_one_off: submitForm.isOneOff,
+          repeat_interval: submitForm.isOneOff
+            ? null
+            : Number.parseInt(submitForm.repeatInterval, 10),
+          repeat_unit: submitForm.isOneOff ? null : submitForm.repeatUnit,
+          repeat_until: submitForm.isOneOff ? null : submitForm.repeatUntil,
           description: submitForm.description.trim(),
           website: submitForm.website.trim(),
         }),
@@ -443,6 +464,10 @@ export default function App() {
         endsAt: null,
         isOrganizer: null,
         contactConsent: null,
+        isOneOff: null,
+        repeatInterval: "",
+        repeatUnit: "",
+        repeatUntil: "",
         description: "",
         website: "",
       });
@@ -936,6 +961,7 @@ function SubmitEventScreen({
 }) {
   const [showStartPicker, setShowStartPicker] = useState(false);
   const [showEndPicker, setShowEndPicker] = useState(false);
+  const [showRepeatUntilPicker, setShowRepeatUntilPicker] = useState(false);
   const formattedStart = submitForm.startsAt
     ? new Date(submitForm.startsAt).toLocaleString()
     : "";
@@ -958,6 +984,18 @@ function SubmitEventScreen({
     }
     if (selectedDate) {
       updateSubmitForm("endsAt", selectedDate);
+    }
+  };
+
+  const handleRepeatUntilChange = (_event, selectedDate) => {
+    if (Platform.OS !== "ios") {
+      setShowRepeatUntilPicker(false);
+    }
+    if (selectedDate) {
+      updateSubmitForm(
+        "repeatUntil",
+        selectedDate.toISOString().slice(0, 10)
+      );
     }
   };
 
@@ -1008,7 +1046,7 @@ function SubmitEventScreen({
             onChangeText={(value) => updateSubmitForm("phone", value)}
           />
 
-          <Text style={styles.sectionTitle}>Date/Time of Event *</Text>
+          <Text style={styles.sectionTitle}>Start Date/Time *</Text>
           <Pressable
             style={styles.input}
             onPress={() => setShowStartPicker(true)}
@@ -1159,6 +1197,133 @@ function SubmitEventScreen({
                 </Pressable>
               </View>
               <View style={styles.fieldSpacer} />
+            </>
+          ) : null}
+          <Text style={styles.sectionTitle}>Is this event a one-off? *</Text>
+          <View style={styles.segmentedControl}>
+            <Pressable
+              style={[
+                styles.segmentButton,
+                submitForm.isOneOff === true && styles.segmentButtonActive,
+              ]}
+              onPress={() => {
+                updateSubmitForm("isOneOff", true);
+                updateSubmitForm("repeatInterval", "");
+                updateSubmitForm("repeatUnit", "");
+                updateSubmitForm("repeatUntil", "");
+              }}
+            >
+              <Text
+                style={[
+                  styles.segmentButtonText,
+                  submitForm.isOneOff === true && styles.segmentButtonTextActive,
+                ]}
+              >
+                Yes
+              </Text>
+            </Pressable>
+            <Pressable
+              style={[
+                styles.segmentButton,
+                submitForm.isOneOff === false && styles.segmentButtonActive,
+              ]}
+              onPress={() => updateSubmitForm("isOneOff", false)}
+            >
+              <Text
+                style={[
+                  styles.segmentButtonText,
+                  submitForm.isOneOff === false && styles.segmentButtonTextActive,
+                ]}
+              >
+                No
+              </Text>
+            </Pressable>
+          </View>
+          <View style={styles.fieldSpacer} />
+          {submitForm.isOneOff === false ? (
+            <>
+              <Text style={styles.sectionTitle}>Repeat schedule *</Text>
+              <View style={styles.repeatRow}>
+                <TextInput
+                  style={[styles.input, styles.repeatInput]}
+                  placeholder="Every"
+                  placeholderTextColor={styles.inputPlaceholder.color}
+                  keyboardType="number-pad"
+                  value={submitForm.repeatInterval}
+                  onChangeText={(value) => updateSubmitForm("repeatInterval", value)}
+                />
+                <Pressable
+                  style={[styles.input, styles.repeatInput]}
+                  onPress={() => {}}
+                >
+                  <Text style={styles.inputText}>
+                    {submitForm.repeatUnit
+                      ? submitForm.repeatUnit.charAt(0).toUpperCase() +
+                        submitForm.repeatUnit.slice(1)
+                      : "Frequency"}
+                  </Text>
+                </Pressable>
+              </View>
+              <View style={styles.segmentedControl}>
+                {["daily", "weekly", "monthly"].map((unit) => (
+                  <Pressable
+                    key={unit}
+                    style={[
+                      styles.segmentButton,
+                      submitForm.repeatUnit === unit &&
+                        styles.segmentButtonActive,
+                    ]}
+                    onPress={() => updateSubmitForm("repeatUnit", unit)}
+                  >
+                    <Text
+                      style={[
+                        styles.segmentButtonText,
+                        submitForm.repeatUnit === unit &&
+                          styles.segmentButtonTextActive,
+                      ]}
+                    >
+                      {unit.charAt(0).toUpperCase() + unit.slice(1)}
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
+              <View style={styles.fieldSpacer} />
+              <Pressable
+                style={styles.input}
+                onPress={() => setShowRepeatUntilPicker(true)}
+              >
+                <Text
+                  style={
+                    submitForm.repeatUntil
+                      ? styles.inputText
+                      : styles.inputPlaceholder
+                  }
+                >
+                  {submitForm.repeatUntil || "Until (select end date)"}
+                </Text>
+              </Pressable>
+              {showRepeatUntilPicker && (
+                <View style={styles.datePickerContainer}>
+                  <DateTimePicker
+                    value={
+                      submitForm.repeatUntil
+                        ? new Date(submitForm.repeatUntil)
+                        : new Date()
+                    }
+                    mode="date"
+                    display={Platform.OS === "ios" ? "spinner" : "default"}
+                    onChange={handleRepeatUntilChange}
+                  />
+                  {Platform.OS === "ios" && (
+                    <Pressable
+                      style={styles.datePickerDone}
+                      onPress={() => setShowRepeatUntilPicker(false)}
+                    >
+                      <Text style={styles.datePickerDoneText}>Done</Text>
+                    </Pressable>
+                  )}
+                </View>
+              )}
             </>
           ) : null}
 
@@ -1445,6 +1610,14 @@ const getStyles = (theme) =>
     },
     fieldSpacer: {
       height: 10,
+    },
+    repeatRow: {
+      flexDirection: "row",
+      gap: 12,
+      marginBottom: 12,
+    },
+    repeatInput: {
+      flex: 1,
     },
     flex: {
       flex: 1,

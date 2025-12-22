@@ -13,6 +13,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $endsAt = trim($_POST['ends_at'] ?? '');
     $isOrganizer = ($_POST['is_organizer'] ?? '') === 'yes';
     $contactConsent = ($_POST['contact_consent'] ?? '') === 'yes';
+    $isOneOff = ($_POST['is_one_off'] ?? '') === 'yes';
+    $repeatInterval = trim($_POST['repeat_interval'] ?? '');
+    $repeatUnit = trim($_POST['repeat_unit'] ?? '');
+    $repeatUntil = trim($_POST['repeat_until'] ?? '');
     $description = trim($_POST['description'] ?? '');
     $website = trim($_POST['website'] ?? '');
 
@@ -20,10 +24,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = 'Please fill all required fields.';
     } elseif ($isOrganizer && empty($_POST['contact_consent'])) {
         $error = 'Please confirm contact consent if you are running this event.';
+    } elseif (!$isOneOff && ($repeatInterval === '' || $repeatUnit === '' || $repeatUntil === '')) {
+        $error = 'Please complete the repeat schedule details.';
     } else {
         $stmt = db()->prepare(
-            'INSERT INTO event_submissions (name, email, phone, starts_at, ends_at, is_organizer, contact_consent, description, website)
-             VALUES (:name, :email, :phone, :starts_at, :ends_at, :is_organizer, :contact_consent, :description, :website)'
+            'INSERT INTO event_submissions (name, email, phone, starts_at, ends_at, is_organizer, contact_consent, is_one_off, repeat_interval, repeat_unit, repeat_until, description, website)
+             VALUES (:name, :email, :phone, :starts_at, :ends_at, :is_organizer, :contact_consent, :is_one_off, :repeat_interval, :repeat_unit, :repeat_until, :description, :website)'
         );
         $stmt->execute([
             ':name' => $name,
@@ -33,6 +39,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ':ends_at' => $endsAt,
             ':is_organizer' => $isOrganizer ? 1 : 0,
             ':contact_consent' => $isOrganizer ? ($contactConsent ? 1 : 0) : null,
+            ':is_one_off' => $isOneOff ? 1 : 0,
+            ':repeat_interval' => $isOneOff ? null : (int) $repeatInterval,
+            ':repeat_unit' => $isOneOff ? null : $repeatUnit,
+            ':repeat_until' => $isOneOff ? null : $repeatUntil,
             ':description' => $description,
             ':website' => $website ?: null,
         ]);
@@ -100,7 +110,7 @@ function h(string $value): string
           <input id="phone" name="phone" class="form-control" placeholder="(01534) 123456" value="<?php echo h($_POST['phone'] ?? ''); ?>">
         </div>
         <div class="col-md-6">
-          <label for="starts_at" class="form-label">Date/Time of Event *</label>
+          <label for="starts_at" class="form-label">Start Date/Time *</label>
           <input id="starts_at" name="starts_at" type="datetime-local" class="form-control" required value="<?php echo h($_POST['starts_at'] ?? ''); ?>">
         </div>
         <div class="col-md-6">
@@ -124,6 +134,35 @@ function h(string $value): string
           </select>
         </div>
         <div class="col-12">
+          <label for="is_one_off" class="form-label">Is this event a one-off? *</label>
+          <select id="is_one_off" name="is_one_off" class="form-select" required>
+            <option value="" disabled <?php echo empty($_POST['is_one_off']) ? 'selected' : ''; ?>>Select...</option>
+            <option value="yes" <?php echo ($_POST['is_one_off'] ?? '') === 'yes' ? 'selected' : ''; ?>>Yes</option>
+            <option value="no" <?php echo ($_POST['is_one_off'] ?? '') === 'no' ? 'selected' : ''; ?>>No</option>
+          </select>
+        </div>
+        <div class="col-12 d-none" id="repeatSection">
+          <div class="row g-3">
+            <div class="col-md-4">
+              <label for="repeat_interval" class="form-label">Every *</label>
+              <input id="repeat_interval" name="repeat_interval" type="number" min="1" class="form-control" value="<?php echo h($_POST['repeat_interval'] ?? ''); ?>">
+            </div>
+            <div class="col-md-4">
+              <label for="repeat_unit" class="form-label">Frequency *</label>
+              <select id="repeat_unit" name="repeat_unit" class="form-select">
+                <option value="" disabled <?php echo empty($_POST['repeat_unit']) ? 'selected' : ''; ?>>Select...</option>
+                <option value="daily" <?php echo ($_POST['repeat_unit'] ?? '') === 'daily' ? 'selected' : ''; ?>>Daily</option>
+                <option value="weekly" <?php echo ($_POST['repeat_unit'] ?? '') === 'weekly' ? 'selected' : ''; ?>>Weekly</option>
+                <option value="monthly" <?php echo ($_POST['repeat_unit'] ?? '') === 'monthly' ? 'selected' : ''; ?>>Monthly</option>
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label for="repeat_until" class="form-label">Until *</label>
+              <input id="repeat_until" name="repeat_until" type="date" class="form-control" value="<?php echo h($_POST['repeat_until'] ?? ''); ?>">
+            </div>
+          </div>
+        </div>
+        <div class="col-12">
           <label for="description" class="form-label">Please give a short description of the event *</label>
           <textarea id="description" name="description" class="form-control" required><?php echo h($_POST['description'] ?? ''); ?></textarea>
         </div>
@@ -141,6 +180,11 @@ function h(string $value): string
     const organizerSelect = document.getElementById('is_organizer');
     const consentSection = document.getElementById('consentSection');
     const consentSelect = document.getElementById('contact_consent');
+    const oneOffSelect = document.getElementById('is_one_off');
+    const repeatSection = document.getElementById('repeatSection');
+    const repeatInterval = document.getElementById('repeat_interval');
+    const repeatUnit = document.getElementById('repeat_unit');
+    const repeatUntil = document.getElementById('repeat_until');
     if (organizerSelect && consentSection) {
       organizerSelect.addEventListener('change', (event) => {
         const show = event.target.value === 'yes';
@@ -149,6 +193,22 @@ function h(string $value): string
           consentSelect.value = '';
         }
       });
+    }
+    if (oneOffSelect && repeatSection) {
+      const toggleRepeat = (value) => {
+        const show = value === 'no';
+        repeatSection.classList.toggle('d-none', !show);
+        if (!show) {
+          if (repeatInterval) repeatInterval.value = '';
+          if (repeatUnit) repeatUnit.value = '';
+          if (repeatUntil) repeatUntil.value = '';
+        }
+        if (repeatInterval) repeatInterval.required = show;
+        if (repeatUnit) repeatUnit.required = show;
+        if (repeatUntil) repeatUntil.required = show;
+      };
+      toggleRepeat(oneOffSelect.value);
+      oneOffSelect.addEventListener('change', (event) => toggleRepeat(event.target.value));
     }
   </script>
 </body>

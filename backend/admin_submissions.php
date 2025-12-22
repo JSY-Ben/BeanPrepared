@@ -27,7 +27,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     exit;
 }
 
-$query = 'SELECT id, name, email, phone, starts_at, ends_at, is_organizer, contact_consent, status, admin_notes, description, website, created_at FROM event_submissions';
+$query = 'SELECT id, name, email, phone, starts_at, ends_at, is_organizer, contact_consent, is_one_off, repeat_interval, repeat_unit, repeat_until, status, admin_notes, description, website, created_at FROM event_submissions';
 $params = [];
 if ($statusFilter !== 'all') {
     $query .= ' WHERE status = :status';
@@ -95,6 +95,7 @@ function h(string $value): string
             <th>End Time</th>
             <th>Organizer</th>
             <th>Contact Consent</th>
+            <th>Repeats</th>
             <th>Description</th>
             <th>Website</th>
             <th>Status / Notes</th>
@@ -128,6 +129,16 @@ function h(string $value): string
                   </span>
                 <?php else: ?>
                   <span class="text-muted small">N/A</span>
+                <?php endif; ?>
+              </td>
+              <td>
+                <?php if ($submission['is_one_off']): ?>
+                  <span class="text-muted small">One-off</span>
+                <?php else: ?>
+                  <span class="text-muted small">
+                    Every <?php echo h((string) $submission['repeat_interval']); ?>
+                    <?php echo h($submission['repeat_unit']); ?> until <?php echo h($submission['repeat_until']); ?>
+                  </span>
                 <?php endif; ?>
               </td>
               <td><?php echo nl2br(h($submission['description'])); ?></td>
