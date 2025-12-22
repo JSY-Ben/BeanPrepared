@@ -246,54 +246,6 @@ function format_datetime(string $value): string
       return date.toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' });
     }
 
-    function renderEventsForDate(dateKey) {
-      selectedDate = dateKey;
-      if (!dateKey) {
-        selectedDateTitle.textContent = 'Select a date';
-        selectedDateEvents.textContent = 'No events for this date.';
-        return;
-      }
-      selectedDateTitle.textContent = formatDateLabel(new Date(dateKey));
-      const items = eventsByDate[dateKey] || [];
-      if (items.length === 0) {
-        selectedDateEvents.textContent = 'No events for this date.';
-        return;
-      }
-      selectedDateEvents.innerHTML = items.map((event) => {
-        const time = new Date(event.starts_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        const description = event.description ? `<div class="text-muted small">${event.description}</div>` : '';
-        return `<div class="mb-2"><div class="fw-semibold">${event.title} <span class="badge text-bg-warning">${event.type_name}</span></div><div class="small text-muted">${time}</div>${description}</div>`;
-      }).join('');
-    }
-
-    function renderCalendar() {
-      const year = current.getFullYear();
-      const month = current.getMonth();
-      const firstDay = new Date(year, month, 1);
-      const lastDay = new Date(year, month + 1, 0);
-      const startOffset = (firstDay.getDay() + 6) % 7;
-
-      monthTitle.textContent = current.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
-      calendarMonthLabel.textContent = monthTitle.textContent;
-
-      let html = '';
-      let day = 1 - startOffset;
-      for (let week = 0; week < 6; week += 1) {
-        html += '<tr>';
-        for (let i = 0; i < 7; i += 1) {
-          const cellDate = new Date(year, month, day);
-          const dateKey = cellDate.toISOString().slice(0, 10);
-          const isCurrentMonth = cellDate.getMonth() === month;
-          const hasEvents = Boolean(eventsByDate[dateKey]);
-          const isSelected = selectedDate === dateKey;
-          html += `<td class="${isCurrentMonth ? '' : 'text-muted bg-light'} ${isSelected ? 'table-warning' : ''} ${hasEvents ? 'calendar-event' : ''}" data-date="${dateKey}">${cellDate.getDate()}${hasEvents ? '<div class="calendar-dot"></div>' : ''}</td>`;
-          day += 1;
-        }
-        html += '</tr>';
-      }
-      calendarGrid.innerHTML = html;
-    }
-
     function switchView(mode) {
       if (mode === 'calendar') {
         listView.classList.add('d-none');
@@ -344,15 +296,20 @@ function format_datetime(string $value): string
       });
     }
 
-    if (eventSearch) {
-      eventSearch.addEventListener('input', applySearchFilter);
+    function getSearchQuery() {
+      return eventSearch ? eventSearch.value.trim().toLowerCase() : '';
     }
-  </script>
-</body>
-</html>
+
+    function matchesQuery(eventItem, query) {
+      if (!query) return true;
+      const title = (eventItem.title || '').toLowerCase();
+      const description = (eventItem.description || '').toLowerCase();
+      return title.includes(query) || description.includes(query);
+    }
+
     function applySearchFilter() {
       if (!eventCards) return;
-      const query = eventSearch ? eventSearch.value.trim().toLowerCase() : '';
+      const query = getSearchQuery();
       let visible = 0;
       eventCards.querySelectorAll('.event-card').forEach((card) => {
         const title = card.dataset.title || '';
@@ -365,3 +322,69 @@ function format_datetime(string $value): string
         noResults.classList.toggle('d-none', visible > 0);
       }
     }
+
+    function renderCalendar() {
+      const year = current.getFullYear();
+      const month = current.getMonth();
+      const firstDay = new Date(year, month, 1);
+      const lastDay = new Date(year, month + 1, 0);
+      const startOffset = (firstDay.getDay() + 6) % 7;
+
+      monthTitle.textContent = current.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
+      calendarMonthLabel.textContent = monthTitle.textContent;
+
+      const query = getSearchQuery();
+      let html = '';
+      let day = 1 - startOffset;
+      for (let week = 0; week < 6; week += 1) {
+        html += '<tr>';
+        for (let i = 0; i < 7; i += 1) {
+          const cellDate = new Date(year, month, day);
+          const dateKey = cellDate.toISOString().slice(0, 10);
+          const isCurrentMonth = cellDate.getMonth() === month;
+          const dayEvents = (eventsByDate[dateKey] || []).filter((eventItem) =>
+            matchesQuery(eventItem, query)
+          );
+          const hasEvents = dayEvents.length > 0;
+          const isSelected = selectedDate === dateKey;
+          html += `<td class="${isCurrentMonth ? '' : 'text-muted bg-light'} ${isSelected ? 'table-warning' : ''} ${hasEvents ? 'calendar-event' : ''}" data-date="${dateKey}">${cellDate.getDate()}${hasEvents ? '<div class="calendar-dot"></div>' : ''}</td>`;
+          day += 1;
+        }
+        html += '</tr>';
+      }
+      calendarGrid.innerHTML = html;
+    }
+
+    function renderEventsForDate(dateKey) {
+      selectedDate = dateKey;
+      if (!dateKey) {
+        selectedDateTitle.textContent = 'Select a date';
+        selectedDateEvents.textContent = 'No events for this date.';
+        return;
+      }
+      selectedDateTitle.textContent = formatDateLabel(new Date(dateKey));
+      const query = getSearchQuery();
+      const items = (eventsByDate[dateKey] || []).filter((eventItem) =>
+        matchesQuery(eventItem, query)
+      );
+      if (items.length === 0) {
+        selectedDateEvents.textContent = 'No events for this date.';
+        return;
+      }
+      selectedDateEvents.innerHTML = items.map((eventItem) => {
+        const time = new Date(eventItem.starts_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        const description = eventItem.description ? `<div class="text-muted small">${eventItem.description}</div>` : '';
+        return `<div class="mb-2"><div class="fw-semibold">${eventItem.title} <span class="badge text-bg-warning">${eventItem.type_name}</span></div><div class="small text-muted">${time}</div>${description}</div>`;
+      }).join('');
+    }
+
+    if (eventSearch) {
+      eventSearch.addEventListener('input', () => {
+        applySearchFilter();
+        renderCalendar();
+        renderEventsForDate(selectedDate);
+      });
+    }
+  </script>
+</body>
+</html>
