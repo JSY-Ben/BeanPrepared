@@ -5,7 +5,7 @@ require __DIR__ . '/../lib/onesignal.php';
 
 $pdo = db();
 $now = new DateTimeImmutable('now', new DateTimeZone('UTC'));
-$windowMinutes = 5;
+$windowPaddingMinutes = 1;
 
 $leadStmt = $pdo->query('SELECT DISTINCT lead_minutes FROM user_notification_leads');
 $leads = $leadStmt->fetchAll(PDO::FETCH_COLUMN);
@@ -16,8 +16,10 @@ foreach ($leads as $leadMinutes) {
         continue;
     }
 
-    $windowStart = $now->add(new DateInterval('PT' . $leadMinutes . 'M'));
-    $windowEnd = $windowStart->add(new DateInterval('PT' . $windowMinutes . 'M'));
+    $leadInterval = new DateInterval('PT' . $leadMinutes . 'M');
+    $paddingInterval = new DateInterval('PT' . $windowPaddingMinutes . 'M');
+    $windowStart = $now->add($leadInterval)->sub($paddingInterval);
+    $windowEnd = $now->add($leadInterval)->add($paddingInterval);
 
     $eventStmt = $pdo->prepare(
         'SELECT events.id, events.title, events.starts_at, notification_types.slug AS type_slug

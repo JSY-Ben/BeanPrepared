@@ -19,7 +19,7 @@
 - `POST /api/event-submissions`
 
 ## Cron
-Run the notification sender every 5 minutes:
+Run the notification sender every minute for short lead times:
 - `php cron/send_notifications.php`
 
 ## Admin

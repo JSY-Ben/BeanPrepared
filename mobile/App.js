@@ -23,6 +23,7 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Ionicons } from "@expo/vector-icons";
 import { Calendar } from "react-native-calendars";
 import DateTimePicker from "@react-native-community/datetimepicker";
+import Constants from "expo-constants";
 
 const DEFAULT_NOTIFICATION_TYPES = [
   { id: "general", label: "General Updates" },
@@ -42,6 +43,8 @@ const LEAD_TIMES = [
 const STORAGE_KEY = "ontherock.preferences.v1";
 const Tab = createBottomTabNavigator();
 const API_BASE_URL = "https://bookit.highlands.ac.uk/Web/ontherock";
+const ONESIGNAL_APP_ID = "";
+const EXTERNAL_USER_KEY = "ontherock.externalUserId.v1";
 
 const EVENT_API_PATH = "/api/events";
 
@@ -229,10 +232,52 @@ export default function App() {
     }
   }, []);
 
+  const ensureExternalUserId = useCallback(async () => {
+    const existing = await AsyncStorage.getItem(EXTERNAL_USER_KEY);
+    if (existing) {
+      return existing;
+    }
+    const generated = `otr_${Date.now().toString(36)}_${Math.random()
+      .toString(36)
+      .slice(2, 10)}`;
+    await AsyncStorage.setItem(EXTERNAL_USER_KEY, generated);
+    return generated;
+  }, []);
+
+  const initOneSignal = useCallback(async () => {
+    if (!ONESIGNAL_APP_ID) {
+      return;
+    }
+    if (Constants.appOwnership === "expo") {
+      return;
+    }
+    try {
+      const OneSignal = require("react-native-onesignal").default;
+      OneSignal.setAppId(ONESIGNAL_APP_ID);
+      await OneSignal.Notifications.requestPermission(true);
+      const deviceState = await OneSignal.getDeviceState();
+      const externalUserId = await ensureExternalUserId();
+      if (deviceState?.userId) {
+        await fetch(`${API_BASE_URL}/api/users/register`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            external_user_id: externalUserId,
+            platform: Platform.OS,
+            onesignal_player_id: deviceState.userId,
+          }),
+        });
+      }
+    } catch (error) {
+      console.warn("OneSignal init failed", error);
+    }
+  }, [ensureExternalUserId]);
+
   useEffect(() => {
     loadEvents();
     loadNotificationTypes();
-  }, [loadEvents, loadNotificationTypes]);
+    initOneSignal();
+  }, [loadEvents, loadNotificationTypes, initOneSignal]);
 
   const handleRefresh = useCallback(async () => {
     setIsRefreshing(true);
