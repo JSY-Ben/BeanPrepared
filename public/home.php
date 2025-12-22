@@ -40,25 +40,27 @@
         <img src="/Web/beanprepared/public/images/travis-leery-vjiOM0bkWIM-unsplash.jpg" alt="Harbor view">
       </div>
       <p class="brand-subtitle mb-4">
-        BeanPrepared is for Jersey locals who want a little more notice about what’s coming up around the island.
+        BeanPrepared is for Jersey locals who need a little more notice about certain types of events and what’s coming up around the island.
         Whether you live with PTSD, anxiety, autism, ADHD, or you care for someone who does, this app helps
         you plan ahead and avoid unexpected triggers. It’s also built for pet owners and people caring for
         animals (including farm animals) that may be anxious or sensitive to noise.
       </p>
       <p class="brand-subtitle mb-4">
-        Events are curated and placed into clear categories, so you can filter for what matters most.
-        You can browse right here on the website using the Upcoming Events link above, or download the iOS
+        Events are curated and placed into clear categories, so you can only hear about what matters most.
+        You can browse right here on the website using the 'Upcoming Events' link above, or download the iOS
         or Android app for the full experience.
       </p>
       <p class="brand-subtitle mb-4">
-        You can submit an upcoming event yourself in the app or on this site — whether you are running the event
-        or not. Every submission is reviewed, curated, and added to the app when appropriate.
+        You can submit an upcoming event yourself in the app or on this site, whether you are running the event
+        or not. Every submission is reviewed, curated, and added to the app/site when appropriate.
       </p>
       <p class="brand-subtitle mb-4">
         In the mobile app, you can turn on notifications for specific time periods, so you’re alerted at
         set intervals before events (such as 1 hour, 1 day, or 1 week before). This gives you time to prepare
         yourself, someone you care for, or your pet.
       </p>
+      <p class="brand-subtitle mb-4">
+        This service is totally free and community run in Jersey.
       <div class="d-flex flex-wrap gap-3">
         <a class="btn btn-warning" href="https://example.com/ios" target="_blank" rel="noreferrer">Download on iOS</a>
         <a class="btn btn-outline-warning" href="https://example.com/android" target="_blank" rel="noreferrer">Get it on Android</a>
