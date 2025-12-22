@@ -52,11 +52,50 @@ function h(string $value): string
     crossorigin="anonymous"
   >
   <style>
+    :root {
+      --otr-ink: #2c261f;
+      --otr-muted: #6c6153;
+      --otr-paper: #f5f0e6;
+      --otr-card: #fffdf8;
+      --otr-gold: #c49a2f;
+      --otr-gold-strong: #b8871f;
+      --otr-border: #eadfca;
+      --otr-shadow: 0 12px 30px rgba(44, 38, 31, 0.12);
+    }
     body {
-      background: #f7f4ee;
+      background: radial-gradient(circle at top, #fbf7ef 0%, var(--otr-paper) 48%, #f2eadc 100%);
+      color: var(--otr-ink);
+    }
+    .navbar {
+      background: rgba(255, 253, 248, 0.95) !important;
+      backdrop-filter: blur(8px);
     }
     .brand-subtitle {
-      color: #6a6256;
+      color: var(--otr-muted);
+    }
+    .card {
+      background: var(--otr-card);
+      border: 1px solid var(--otr-border);
+      box-shadow: var(--otr-shadow);
+    }
+    .btn-warning {
+      background: var(--otr-gold);
+      border-color: var(--otr-gold);
+      color: #1f1708;
+      border-radius: 999px;
+      font-weight: 700;
+    }
+    .form-control,
+    .form-select {
+      border-radius: 12px;
+      border-color: var(--otr-border);
+      background: #fffdf8;
+    }
+    a {
+      color: var(--otr-gold-strong);
+    }
+    a:hover {
+      color: #8c6513;
     }
   </style>
 </head>
