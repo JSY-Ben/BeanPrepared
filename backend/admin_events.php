@@ -13,6 +13,19 @@ function h(string $value): string
     return htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
 }
 
+function format_datetime(string $value): string
+{
+    if ($value === '') {
+        return '';
+    }
+    try {
+        $dt = new DateTime($value);
+        return $dt->format('d/m/Y g:i A');
+    } catch (Throwable $error) {
+        return $value;
+    }
+}
+
 function form_value(string $key, ?array $editEvent, array $formData): string
 {
     if (array_key_exists($key, $formData)) {
@@ -37,6 +50,11 @@ function format_repeat(array $event): string
         return 'Repeats';
     }
     $label = $interval === 1 ? $unit : $unit . 's';
+    try {
+        $untilDate = new DateTime($until);
+        $until = $untilDate->format('d/m/Y');
+    } catch (Throwable $error) {
+    }
     return 'Every ' . $interval . ' ' . $label . ' until ' . $until;
 }
 
@@ -320,9 +338,9 @@ $events = $pdo->query('SELECT events.id, events.title, events.description, event
                     <?php foreach ($events as $event): ?>
                       <tr>
                         <td><?php echo h($event['title']); ?></td>
-                        <td><?php echo h($event['starts_at']); ?></td>
+                        <td><?php echo h(format_datetime($event['starts_at'])); ?></td>
                         <td><?php echo h($event['type_name']); ?></td>
-                        <td><?php echo h($event['ends_at'] ?? ''); ?></td>
+                        <td><?php echo h(format_datetime($event['ends_at'] ?? '')); ?></td>
                         <td><?php echo h($event['website'] ?? ''); ?></td>
                         <td><?php echo h($event['organiser_email'] ?? ''); ?></td>
                         <td><?php echo h($event['organiser_phone'] ?? ''); ?></td>

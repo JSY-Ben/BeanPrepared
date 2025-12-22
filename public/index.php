@@ -40,7 +40,7 @@ function format_datetime(string $value): string
 {
     try {
         $dt = new DateTime($value);
-        return $dt->format('D, M j, Y g:i A');
+        return $dt->format('d/m/Y g:i A');
     } catch (Throwable $error) {
         return $value;
     }
@@ -379,7 +379,16 @@ usort($events, static fn ($a, $b) => strcmp($a['starts_at'], $b['starts_at']));
     let selectedDate = null;
 
     function formatDateLabel(date) {
-      return date.toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' });
+      const day = String(date.getDate()).padStart(2, '0');
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const year = date.getFullYear();
+      const weekday = date.toLocaleDateString(undefined, { weekday: 'long' });
+      return `${weekday}, ${day}/${month}/${year}`;
+    }
+
+    function formatTime(value) {
+      const date = new Date(value);
+      return date.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit', hour12: true });
     }
 
     function switchView(mode) {
@@ -508,10 +517,10 @@ usort($events, static fn ($a, $b) => strcmp($a['starts_at'], $b['starts_at']));
         return;
       }
       selectedDateEvents.innerHTML = items.map((eventItem) => {
-        const time = new Date(eventItem.starts_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        const time = formatTime(eventItem.starts_at);
         const description = eventItem.description ? `<div class="text-muted small">${eventItem.description}</div>` : '';
         const endTime = eventItem.ends_at
-          ? new Date(eventItem.ends_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+          ? formatTime(eventItem.ends_at)
           : '';
         const timeLabel = endTime ? `${time} • ${endTime}` : time;
         const repeat = eventItem.repeat_label ? `<div class="mb-2"><span class="badge text-bg-light border">${eventItem.repeat_label}</span></div>` : '';
