@@ -10,11 +10,15 @@ if (!in_array($statusFilter, $allowed, true)) {
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $id = (int) ($_POST['id'] ?? 0);
+    $action = $_POST['action'] ?? 'update';
     $status = $_POST['status'] ?? '';
     $notes = trim($_POST['admin_notes'] ?? '');
     $statusAllowed = ['pending', 'approved', 'rejected'];
 
-    if ($id > 0 && in_array($status, $statusAllowed, true)) {
+    if ($action === 'delete' && $id > 0) {
+        $stmt = db()->prepare('DELETE FROM event_submissions WHERE id = :id');
+        $stmt->execute([':id' => $id]);
+    } elseif ($id > 0 && in_array($status, $statusAllowed, true)) {
         $stmt = db()->prepare('UPDATE event_submissions SET status = :status, admin_notes = :admin_notes WHERE id = :id');
         $stmt->execute([
             ':status' => $status,
@@ -41,6 +45,26 @@ $submissions = $stmt->fetchAll();
 function h(string $value): string
 {
     return htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
+}
+
+function format_datetime(string $value): string
+{
+    try {
+        $dt = new DateTime($value);
+        return $dt->format('d/m/Y g:i A');
+    } catch (Throwable $error) {
+        return $value;
+    }
+}
+
+function format_date(string $value): string
+{
+    try {
+        $dt = new DateTime($value);
+        return $dt->format('d/m/Y');
+    } catch (Throwable $error) {
+        return $value;
+    }
 }
 
 ?><!doctype html>
@@ -93,19 +117,19 @@ function h(string $value): string
             <th>Contact</th>
             <th>Event Time</th>
             <th>End Time</th>
-            <th>Organizer</th>
+            <th>Organiser</th>
             <th>Contact Consent</th>
             <th>Repeats</th>
             <th>Description</th>
             <th>Website</th>
-            <th>Status / Notes</th>
+            <th class="submission-status">Status / Notes</th>
           </tr>
           </thead>
           <tbody>
           <?php foreach ($submissions as $submission): ?>
             <tr>
               <td>
-                <div><?php echo h($submission['created_at']); ?></div>
+                <div><?php echo h(format_datetime($submission['created_at'])); ?></div>
                 <div class="text-muted small">ID: <?php echo h((string) $submission['id']); ?></div>
               </td>
               <td><?php echo h($submission['name']); ?></td>
@@ -115,8 +139,8 @@ function h(string $value): string
                   <div class="text-muted small"><?php echo h($submission['phone']); ?></div>
                 <?php endif; ?>
               </td>
-              <td><?php echo h($submission['starts_at']); ?></td>
-              <td><?php echo h($submission['ends_at']); ?></td>
+              <td><?php echo h(format_datetime($submission['starts_at'])); ?></td>
+              <td><?php echo h(format_datetime($submission['ends_at'])); ?></td>
               <td>
                 <span class="badge text-bg-warning">
                   <?php echo $submission['is_organizer'] ? 'Yes' : 'No'; ?>
@@ -137,7 +161,7 @@ function h(string $value): string
                 <?php else: ?>
                   <span class="text-muted small">
                     Every <?php echo h((string) $submission['repeat_interval']); ?>
-                    <?php echo h($submission['repeat_unit']); ?> until <?php echo h($submission['repeat_until']); ?>
+                    <?php echo h(ucfirst($submission['repeat_unit'])); ?> until <?php echo h(format_date($submission['repeat_until'])); ?>
                   </span>
                 <?php endif; ?>
               </td>
@@ -151,8 +175,9 @@ function h(string $value): string
                   <span class="text-muted small">N/A</span>
                 <?php endif; ?>
               </td>
-              <td>
+              <td class="submission-status">
                 <form method="post">
+                  <input type="hidden" name="action" value="update">
                   <input type="hidden" name="id" value="<?php echo h((string) $submission['id']); ?>">
                   <select class="form-select form-select-sm mb-2" name="status">
                     <option value="pending" <?php echo $submission['status'] === 'pending' ? 'selected' : ''; ?>>Pending</option>
@@ -160,7 +185,10 @@ function h(string $value): string
                     <option value="rejected" <?php echo $submission['status'] === 'rejected' ? 'selected' : ''; ?>>Rejected</option>
                   </select>
                   <textarea class="form-control form-control-sm mb-2" name="admin_notes" rows="3" placeholder="Admin notes"><?php echo h($submission['admin_notes'] ?? ''); ?></textarea>
-                  <button class="btn btn-sm btn-warning fw-semibold" type="submit">Save</button>
+                  <div class="d-flex flex-wrap gap-2">
+                    <button class="btn btn-sm btn-warning fw-semibold" type="submit">Save</button>
+                    <button class="btn btn-sm btn-outline-danger" type="submit" name="action" value="delete" onclick="return confirm('Delete this submission?');">Delete</button>
+                  </div>
                 </form>
               </td>
             </tr>

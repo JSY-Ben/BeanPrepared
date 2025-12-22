@@ -107,3 +107,11 @@ h3,
 .table th {
   border-color: var(--otr-border);
 }
+
+.submission-status {
+  min-width: 260px;
+}
+
+.submission-status textarea {
+  min-height: 120px;
+}
