@@ -1,0 +1,17 @@
+{
+  "expo": {
+    "name": "OnTheRock",
+    "slug": "ontherock",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "bundleIdentifier": "com.ontherock.app",
+      "supportsTablet": true
+    },
+    "android": {
+      "package": "com.ontherock.app"
+    }
+  }
+}
