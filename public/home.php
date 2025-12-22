@@ -40,9 +40,9 @@
         <img src="/Web/beanprepared/public/images/travis-leery-vjiOM0bkWIM-unsplash.jpg" alt="Harbor view">
       </div>
       <p class="brand-subtitle mb-4">
-        BeanPrepared is for Jersey locals who need a little more notice about certain types of events and what’s coming up around the island.
+        BeanPrepared is for Jersey locals who need a little more notice about certain types of events, situations and changes to a normal routine day on the island.
         Whether you live with PTSD, anxiety, autism, ADHD, or you care for someone who does, this app helps
-        you plan ahead and avoid unexpected triggers. It’s also built for pet owners and people caring for
+        you plan ahead where possible and avoid unexpected triggers. It’s also built for pet owners and people caring for
         animals (including farm animals) that may be anxious or sensitive to noise.
       </p>
       <p class="brand-subtitle mb-4">
