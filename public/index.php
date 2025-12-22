@@ -380,7 +380,7 @@ function format_datetime(string $value): string
       selectedDateEvents.innerHTML = items.map((eventItem) => {
         const time = new Date(eventItem.starts_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         const description = eventItem.description ? `<div class="text-muted small">${eventItem.description}</div>` : '';
-        return `<div class="mb-2"><div class="fw-semibold">${eventItem.title} <span class="badge text-bg-warning">${eventItem.type_name}</span></div><div class="small text-muted">${time}</div>${description}</div>`;
+        return `<div class="event-card event-card-compact mb-3"><div class="event-meta">${time}</div><div class="event-title">${eventItem.title} <span class="badge text-bg-warning">${eventItem.type_name}</span></div>${description}</div>`;
       }).join('');
     }
 

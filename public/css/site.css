@@ -126,13 +126,14 @@ body {
 
 .event-card {
   border: 1px solid rgba(30, 143, 165, 0.2);
-  background: linear-gradient(135deg, #ffffff 0%, rgba(217, 244, 255, 0.7) 55%, rgba(214, 245, 236, 0.75) 100%);
+  background: linear-gradient(135deg, #ffffff 0%, rgba(180, 230, 255, 0.75) 50%, rgba(170, 240, 220, 0.85) 100%);
+  border-left: 6px solid #1e8fa5;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .event-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 24px 46px rgba(30, 143, 165, 0.25);
+  box-shadow: 0 26px 52px rgba(30, 143, 165, 0.3);
 }
 
 .event-meta {
@@ -141,7 +142,7 @@ body {
 }
 
 .event-title {
-  font-size: 1.5rem;
+  font-size: 1.6rem;
   font-weight: 700;
   color: #14657c;
 }
@@ -155,6 +156,11 @@ body {
   background: rgba(20, 101, 124, 0.12) !important;
   color: #0f4b5b !important;
   border: 1px solid rgba(20, 101, 124, 0.2);
+}
+
+.event-card-compact {
+  padding: 14px 16px;
+  border-radius: 16px;
 }
 
 .calendar-dot {
