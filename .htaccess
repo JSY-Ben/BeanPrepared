@@ -1,0 +1,11 @@
+RewriteEngine On
+
+# Ensure mod_rewrite treats this as a subfolder app
+RewriteBase /Web/ontherock/
+
+# Route API requests to the backend router
+RewriteRule ^api/?(.*)$ backend/index.php [L,QSA]
+
+# Optional friendly routes for the public site
+RewriteRule ^$ public/index.php [L]
+RewriteRule ^submit/?$ public/submit.php [L]
