@@ -129,7 +129,7 @@ function format_datetime(string $value): string
         <?php endforeach; ?>
       </div>
     </div>
-    <div class="mb-4">
+    <div class="mb-4" id="dateFilters">
       <div class="btn-group flex-wrap" role="group" aria-label="Filter by time window">
         <a class="btn btn-sm <?php echo $windowFilter === 'all' ? 'btn-warning' : 'btn-outline-warning'; ?>" href="index.php<?php echo $typeFilter !== 'all' ? '?type=' . h($typeFilter) : ''; ?>">All dates</a>
         <?php foreach ($windowOptions as $option): ?>
@@ -217,6 +217,7 @@ function format_datetime(string $value): string
     const calendarBtn = document.getElementById('viewCalendarBtn');
     const listView = document.getElementById('listView');
     const calendarView = document.getElementById('calendarView');
+    const dateFilters = document.getElementById('dateFilters');
     const monthTitle = document.getElementById('monthTitle');
     const calendarGrid = document.getElementById('calendarGrid');
     const selectedDateTitle = document.getElementById('selectedDateTitle');
@@ -302,6 +303,9 @@ function format_datetime(string $value): string
       if (mode === 'calendar') {
         listView.classList.add('d-none');
         calendarView.classList.remove('d-none');
+        if (dateFilters) {
+          dateFilters.classList.add('d-none');
+        }
         listBtn.classList.remove('btn-warning');
         listBtn.classList.add('btn-outline-warning');
         calendarBtn.classList.add('btn-warning');
@@ -310,6 +314,9 @@ function format_datetime(string $value): string
       } else {
         calendarView.classList.add('d-none');
         listView.classList.remove('d-none');
+        if (dateFilters) {
+          dateFilters.classList.remove('d-none');
+        }
         listBtn.classList.add('btn-warning');
         listBtn.classList.remove('btn-outline-warning');
         calendarBtn.classList.remove('btn-warning');
