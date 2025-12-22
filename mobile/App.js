@@ -1,5 +1,5 @@
 import "react-native-gesture-handler";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   StyleSheet,
   Text,
@@ -12,6 +12,7 @@ import {
   TextInput,
   Platform,
   KeyboardAvoidingView,
+  RefreshControl,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { StatusBar } from "expo-status-bar";
@@ -62,8 +63,11 @@ export default function App() {
   const [eventView, setEventView] = useState("list");
   const [selectedDate, setSelectedDate] = useState(null);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [viewTypeFilter, setViewTypeFilter] = useState("all");
+  const [viewDateWindow, setViewDateWindow] = useState("all");
   const [events, setEvents] = useState([]);
   const [eventsStatus, setEventsStatus] = useState("idle");
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [submitForm, setSubmitForm] = useState({
     name: "",
     email: "",
@@ -76,11 +80,41 @@ export default function App() {
   const [submitStatus, setSubmitStatus] = useState("idle");
 
   const filteredEvents = useMemo(() => {
-    const typeSet = selectedTypes.size > 0 ? selectedTypes : null;
-    return events.filter((event) =>
-      typeSet ? typeSet.has(event.type) : true
-    ).sort((a, b) => new Date(a.startsAt) - new Date(b.startsAt));
-  }, [events, selectedTypes]);
+    return events
+      .filter((event) => (viewTypeFilter === "all" ? true : event.type === viewTypeFilter))
+      .sort((a, b) => new Date(a.startsAt) - new Date(b.startsAt));
+  }, [events, viewTypeFilter]);
+
+  const listFilteredEvents = useMemo(() => {
+    if (viewDateWindow === "all") {
+      return filteredEvents;
+    }
+    const now = new Date();
+    const start = new Date(now);
+    const end = new Date(now);
+
+    if (viewDateWindow === "today") {
+      start.setHours(0, 0, 0, 0);
+      end.setHours(23, 59, 59, 999);
+    } else if (viewDateWindow === "week") {
+      const day = (start.getDay() + 6) % 7; // Monday as start of week
+      start.setDate(start.getDate() - day);
+      start.setHours(0, 0, 0, 0);
+      end.setTime(start.getTime());
+      end.setDate(end.getDate() + 6);
+      end.setHours(23, 59, 59, 999);
+    } else if (viewDateWindow === "month") {
+      start.setDate(1);
+      start.setHours(0, 0, 0, 0);
+      end.setMonth(end.getMonth() + 1, 0);
+      end.setHours(23, 59, 59, 999);
+    }
+
+    return filteredEvents.filter((event) => {
+      const eventTime = new Date(event.startsAt).getTime();
+      return eventTime >= start.getTime() && eventTime <= end.getTime();
+    });
+  }, [filteredEvents, viewDateWindow]);
 
   const eventsByDate = useMemo(() => {
     const map = new Map();
@@ -149,39 +183,37 @@ export default function App() {
     save();
   }, [isLoaded, selectedTypes, selectedLeads]);
 
-  useEffect(() => {
-    let isActive = true;
-    const loadEvents = async () => {
-      try {
-        setEventsStatus("loading");
-        const response = await fetch(`${API_BASE_URL}${EVENT_API_PATH}`);
-        if (!response.ok) {
-          throw new Error("Failed to load events");
-        }
-        const payload = await response.json();
-        const mapped = (payload.data || []).map((event) => ({
-          id: String(event.id),
-          title: event.title,
-          description: event.description,
-          startsAt: event.starts_at,
-          type: event.type_slug,
-        }));
-        if (isActive) {
-          setEvents(mapped);
-          setEventsStatus("loaded");
-        }
-      } catch (error) {
-        if (isActive) {
-          setEventsStatus("error");
-        }
+  const loadEvents = useCallback(async () => {
+    try {
+      setEventsStatus("loading");
+      const response = await fetch(`${API_BASE_URL}${EVENT_API_PATH}`);
+      if (!response.ok) {
+        throw new Error("Failed to load events");
       }
-    };
-
-    loadEvents();
-    return () => {
-      isActive = false;
-    };
+      const payload = await response.json();
+      const mapped = (payload.data || []).map((event) => ({
+        id: String(event.id),
+        title: event.title,
+        description: event.description,
+        startsAt: event.starts_at,
+        type: event.type_slug,
+      }));
+      setEvents(mapped);
+      setEventsStatus("loaded");
+    } catch (error) {
+      setEventsStatus("error");
+    }
   }, []);
+
+  useEffect(() => {
+    loadEvents();
+  }, [loadEvents]);
+
+  const handleRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    await loadEvents();
+    setIsRefreshing(false);
+  }, [loadEvents]);
 
   const toggleType = (id) => {
     setSelectedTypes((prev) => {
@@ -205,6 +237,14 @@ export default function App() {
       }
       return next;
     });
+  };
+
+  const selectViewType = (id) => {
+    setViewTypeFilter(id);
+  };
+
+  const selectViewDateWindow = (value) => {
+    setViewDateWindow(value);
   };
 
   const handleSave = () => {
@@ -347,17 +387,25 @@ export default function App() {
         >
           <Tab.Screen name="Upcoming Events">
             {() => (
-              <MainScreen
-                styles={styles}
-                eventView={eventView}
-                setEventView={setEventView}
-                filteredEvents={filteredEvents}
-                markedDates={markedDates}
-                selectedDate={selectedDate}
-                setSelectedDate={setSelectedDate}
-                eventsByDate={eventsByDate}
-                eventsStatus={eventsStatus}
-              />
+                <MainScreen
+                  styles={styles}
+                  eventView={eventView}
+                  setEventView={setEventView}
+                  filteredEvents={filteredEvents}
+                  listFilteredEvents={listFilteredEvents}
+                  markedDates={markedDates}
+                  selectedDate={selectedDate}
+                  setSelectedDate={setSelectedDate}
+                  eventsByDate={eventsByDate}
+                  eventsStatus={eventsStatus}
+                  isRefreshing={isRefreshing}
+                  handleRefresh={handleRefresh}
+                  selectedTypes={selectedTypes}
+                  viewTypeFilter={viewTypeFilter}
+                  selectViewType={selectViewType}
+                  viewDateWindow={viewDateWindow}
+                  selectViewDateWindow={selectViewDateWindow}
+                />
             )}
           </Tab.Screen>
           <Tab.Screen name="Submit Event">
@@ -395,11 +443,19 @@ function MainScreen({
   eventView,
   setEventView,
   filteredEvents,
+  listFilteredEvents,
   markedDates,
   selectedDate,
   setSelectedDate,
   eventsByDate,
   eventsStatus,
+  isRefreshing,
+  handleRefresh,
+  selectedTypes,
+  viewTypeFilter,
+  selectViewType,
+  viewDateWindow,
+  selectViewDateWindow,
 }) {
   const selectedEvents = selectedDate ? eventsByDate.get(selectedDate) || [] : [];
   const header = (
@@ -443,13 +499,110 @@ function MainScreen({
           </Text>
         </Pressable>
       </View>
+      <View style={styles.filterRow}>
+        <Pressable
+          style={[
+            styles.filterChip,
+            viewTypeFilter === "all" && styles.filterChipActive,
+          ]}
+          onPress={() => selectViewType("all")}
+        >
+          <Text
+            style={[
+              styles.filterChipText,
+              viewTypeFilter === "all" && styles.filterChipTextActive,
+            ]}
+          >
+            All
+          </Text>
+        </Pressable>
+        {NOTIFICATION_TYPES.filter((type) =>
+          selectedTypes.size > 0 ? selectedTypes.has(type.id) : true
+        ).map((type) => {
+          const isActive = viewTypeFilter === type.id;
+          return (
+            <Pressable
+              key={type.id}
+              style={[styles.filterChip, isActive && styles.filterChipActive]}
+              onPress={() => selectViewType(type.id)}
+            >
+              <Text
+                style={[
+                  styles.filterChipText,
+                  isActive && styles.filterChipTextActive,
+                ]}
+              >
+                {type.label}
+              </Text>
+            </Pressable>
+          );
+        })}
+      </View>
+      {eventView === "list" ? (
+        <>
+          <Text style={styles.filterLabel}>Time window</Text>
+          <View style={styles.filterRow}>
+            <Pressable
+              style={[
+                styles.filterChip,
+                viewDateWindow === "all" && styles.filterChipActive,
+              ]}
+              onPress={() => selectViewDateWindow("all")}
+            >
+              <Text
+                style={[
+                  styles.filterChipText,
+                  viewDateWindow === "all" && styles.filterChipTextActive,
+                ]}
+              >
+                All dates
+              </Text>
+            </Pressable>
+            {[
+              { id: "today", label: "Today" },
+              { id: "week", label: "This Week" },
+              { id: "month", label: "This Month" },
+            ].map((window) => {
+              const isActive = viewDateWindow === window.id;
+              return (
+                <Pressable
+                  key={window.id}
+                  style={[
+                    styles.filterChip,
+                    isActive && styles.filterChipActive,
+                  ]}
+                  onPress={() => selectViewDateWindow(window.id)}
+                >
+                  <Text
+                    style={[
+                      styles.filterChipText,
+                      isActive && styles.filterChipTextActive,
+                    ]}
+                  >
+                    {window.label}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+        </>
+      ) : null}
     </View>
   );
 
   if (eventView === "calendar") {
     return (
       <SafeAreaView style={styles.container} edges={["top"]}>
-        <ScrollView contentContainerStyle={styles.content}>
+        <ScrollView
+          contentContainerStyle={styles.content}
+          refreshControl={
+            <RefreshControl
+              refreshing={isRefreshing}
+              onRefresh={handleRefresh}
+              tintColor={styles.refreshTint.color}
+            />
+          }
+        >
           {header}
           <View style={styles.section}>
             <Calendar
@@ -503,6 +656,11 @@ function MainScreen({
                       minute: "2-digit",
                     })}
                   </Text>
+                  {event.description ? (
+                    <Text style={styles.eventDescription}>
+                      {event.description}
+                    </Text>
+                  ) : null}
                 </View>
               ))
             )}
@@ -514,7 +672,16 @@ function MainScreen({
 
   return (
     <SafeAreaView style={styles.container} edges={["top"]}>
-      <ScrollView contentContainerStyle={styles.content}>
+      <ScrollView
+        contentContainerStyle={styles.content}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefreshing}
+            onRefresh={handleRefresh}
+            tintColor={styles.refreshTint.color}
+          />
+        }
+      >
         {header}
 
         {eventsStatus === "loading" ? (
@@ -529,7 +696,7 @@ function MainScreen({
               Please check your connection and try again.
             </Text>
           </View>
-        ) : filteredEvents.length === 0 ? (
+        ) : listFilteredEvents.length === 0 ? (
           <View style={styles.emptyState}>
             <Text style={styles.emptyTitle}>No events yet</Text>
             <Text style={styles.emptyText}>
@@ -538,13 +705,18 @@ function MainScreen({
           </View>
         ) : (
           <View style={styles.section}>
-            {filteredEvents.map((event) => (
+            {listFilteredEvents.map((event) => (
               <View key={event.id} style={styles.eventRow}>
                 <View>
                   <Text style={styles.eventTitle}>{event.title}</Text>
                   <Text style={styles.eventMeta}>
                     {new Date(event.startsAt).toLocaleString()}
                   </Text>
+                  {event.description ? (
+                    <Text style={styles.eventDescription}>
+                      {event.description}
+                    </Text>
+                  ) : null}
                 </View>
                 <View style={styles.eventTag}>
                   <Text style={styles.eventTagText}>{event.type}</Text>
@@ -886,6 +1058,12 @@ const getStyles = (theme) =>
       color: theme.textSecondary,
       marginTop: 2,
     },
+    eventDescription: {
+      fontSize: 13,
+      color: theme.textSecondary,
+      marginTop: 6,
+      lineHeight: 18,
+    },
     eventTag: {
       backgroundColor: theme.tagBackground,
       paddingHorizontal: 10,
@@ -941,6 +1119,36 @@ const getStyles = (theme) =>
       backgroundColor: theme.border,
       borderRadius: 18,
       padding: 4,
+    },
+    filterRow: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      gap: 8,
+    },
+    filterLabel: {
+      fontSize: 13,
+      color: theme.textSecondary,
+      fontWeight: "600",
+    },
+    filterChip: {
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+      borderRadius: 999,
+      backgroundColor: theme.surface,
+      borderWidth: 1,
+      borderColor: theme.border,
+    },
+    filterChipActive: {
+      backgroundColor: theme.accent,
+      borderColor: theme.accent,
+    },
+    filterChipText: {
+      fontSize: 12,
+      color: theme.textMuted,
+      fontWeight: "600",
+    },
+    filterChipTextActive: {
+      color: theme.accentText,
     },
     segmentButton: {
       flex: 1,
@@ -1018,6 +1226,9 @@ const getStyles = (theme) =>
       color: theme.textSecondary,
       marginTop: 6,
       textAlign: "center",
+    },
+    refreshTint: {
+      color: theme.accent,
     },
     button: {
       backgroundColor: theme.accent,
