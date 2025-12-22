@@ -141,11 +141,16 @@ body {
 }
 
 .event-title {
-  font-size: 1.1rem;
+  font-size: 1.4rem;
+  font-weight: 700;
 }
 
 .event-description {
   color: #364a57;
+}
+
+.event-card .badge {
+  font-size: 0.75rem;
 }
 
 .calendar-dot {
