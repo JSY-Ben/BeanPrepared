@@ -80,7 +80,7 @@ function format_datetime(string $value): string
     integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
     crossorigin="anonymous"
   >
-  <link rel="stylesheet" href="css/site.css">
+  <link rel="stylesheet" href="/Web/beanprepared/public/css/site.css">
 </head>
 <body>
   <nav class="navbar navbar-expand-lg bg-body-tertiary border-bottom">
