@@ -25,6 +25,8 @@ Run the notification sender every 5 minutes:
 ## Admin
 View submitted events in your browser:
 - `http://localhost:8080/admin_submissions.php`
+Manage events:
+- `http://localhost:8080/admin_events.php`
 
 ## Web Frontend
 Public site mirrors the app for upcoming events and submissions:
