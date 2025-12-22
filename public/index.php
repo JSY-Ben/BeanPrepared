@@ -97,7 +97,8 @@ function format_datetime(string $value): string
       <h1 class="mb-1">Upcoming Events</h1>
       <p class="brand-subtitle">Events curated from the OnTheRock schedule.</p>
     </div>
-    <div class="mb-3 filter-bar">
+    <div class="mb-4 section-card">
+      <div class="section-header">Filter by event type</div>
       <div class="filter-group" aria-label="Filter events">
         <a class="btn btn-sm <?php echo $typeFilter === 'all' ? 'btn-warning' : 'btn-outline-warning'; ?>" href="index.php">All</a>
         <?php foreach ($types as $type): ?>
@@ -107,7 +108,8 @@ function format_datetime(string $value): string
         <?php endforeach; ?>
       </div>
     </div>
-    <div class="mb-4">
+    <div class="mb-4 section-card">
+      <div class="section-header">Search events</div>
       <div class="search-box">
         <span class="search-icon">🔍</span>
         <input
@@ -118,20 +120,24 @@ function format_datetime(string $value): string
           aria-label="Search events"
         >
       </div>
+      <div class="search-help">Tip: search by title or description keywords.</div>
     </div>
-    <div class="d-flex align-items-center justify-content-between mb-3">
-      <div class="btn-group view-toggle" role="group" aria-label="View switch">
-        <button class="btn btn-warning" id="viewListBtn" type="button">List</button>
-        <button class="btn btn-outline-warning" id="viewCalendarBtn" type="button">Calendar</button>
+    <div class="mb-4 section-card">
+      <div class="d-flex align-items-center justify-content-between">
+        <div class="btn-group view-toggle" role="group" aria-label="View switch">
+          <button class="btn btn-warning" id="viewListBtn" type="button">List</button>
+          <button class="btn btn-outline-warning" id="viewCalendarBtn" type="button">Calendar</button>
+        </div>
+        <div class="text-muted small" id="calendarMonthLabel"></div>
       </div>
-      <div class="text-muted small" id="calendarMonthLabel"></div>
     </div>
 
     <?php if (count($events) === 0): ?>
       <div class="alert alert-secondary">No events have been published yet.</div>
     <?php else: ?>
       <div id="listView">
-        <div class="mb-4 filter-bar" id="dateFilters">
+        <div class="mb-4 section-card" id="dateFilters">
+          <div class="section-header">Filter by date window</div>
           <div class="filter-group" aria-label="Filter by time window">
             <a class="btn btn-sm <?php echo $windowFilter === 'all' ? 'btn-warning' : 'btn-outline-warning'; ?>" href="index.php<?php echo $typeFilter !== 'all' ? '?type=' . h($typeFilter) : ''; ?>">All dates</a>
             <?php foreach ($windowOptions as $option): ?>
