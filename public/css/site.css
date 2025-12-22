@@ -69,6 +69,20 @@ body {
   letter-spacing: 0.02em;
 }
 
+.filter-bar {
+  background: rgba(255, 255, 255, 0.75);
+  border: 1px solid var(--otr-border);
+  border-radius: 18px;
+  padding: 12px 14px;
+  box-shadow: 0 10px 20px rgba(30, 143, 165, 0.08);
+}
+
+.filter-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
 .calendar-dot {
   width: 10px;
   height: 10px;

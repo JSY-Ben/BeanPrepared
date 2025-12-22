@@ -97,8 +97,8 @@ function format_datetime(string $value): string
       <h1 class="mb-1">Upcoming Events</h1>
       <p class="brand-subtitle">Events curated from the OnTheRock schedule.</p>
     </div>
-    <div class="mb-4">
-      <div class="btn-group flex-wrap" role="group" aria-label="Filter events">
+    <div class="mb-4 filter-bar">
+      <div class="filter-group" aria-label="Filter events">
         <a class="btn btn-sm <?php echo $typeFilter === 'all' ? 'btn-warning' : 'btn-outline-warning'; ?>" href="index.php">All</a>
         <?php foreach ($types as $type): ?>
           <a class="btn btn-sm <?php echo $typeFilter === $type['slug'] ? 'btn-warning' : 'btn-outline-warning'; ?>" href="index.php?type=<?php echo h($type['slug']); ?>">
@@ -119,8 +119,8 @@ function format_datetime(string $value): string
       <div class="alert alert-secondary">No events have been published yet.</div>
     <?php else: ?>
       <div id="listView">
-        <div class="mb-4" id="dateFilters">
-          <div class="btn-group flex-wrap" role="group" aria-label="Filter by time window">
+        <div class="mb-4 filter-bar" id="dateFilters">
+          <div class="filter-group" aria-label="Filter by time window">
             <a class="btn btn-sm <?php echo $windowFilter === 'all' ? 'btn-warning' : 'btn-outline-warning'; ?>" href="index.php<?php echo $typeFilter !== 'all' ? '?type=' . h($typeFilter) : ''; ?>">All dates</a>
             <?php foreach ($windowOptions as $option): ?>
               <?php
