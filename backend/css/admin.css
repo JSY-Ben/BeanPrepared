@@ -50,6 +50,13 @@ body {
   color: #ffffff;
 }
 
+.btn-warning:hover,
+.btn-warning:focus {
+  background: #147f93;
+  border-color: #147f93;
+  color: #ffffff;
+}
+
 .form-control,
 .form-select {
   border-radius: 12px;
@@ -71,6 +78,21 @@ body {
 .btn-outline-primary:hover,
 .btn-outline-danger:hover {
   background: var(--otr-wash);
+}
+
+.btn-outline-warning:hover,
+.btn-outline-warning:focus {
+  border-color: var(--otr-teal);
+}
+
+.btn-outline-primary:hover,
+.btn-outline-primary:focus {
+  border-color: var(--otr-teal);
+}
+
+.btn-outline-danger:hover,
+.btn-outline-danger:focus {
+  border-color: #c65b4a;
 }
 
 h1,

@@ -203,6 +203,18 @@ h3,
   color: var(--otr-teal);
 }
 
+.btn-outline-warning:hover,
+.btn-outline-warning:focus {
+  border-color: var(--otr-teal);
+}
+
+.btn-warning:hover,
+.btn-warning:focus {
+  background: #147f93;
+  border-color: #147f93;
+  color: #ffffff;
+}
+
 .table td,
 .table th {
   border-color: var(--otr-border);
