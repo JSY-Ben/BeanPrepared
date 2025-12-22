@@ -74,6 +74,7 @@ function format_datetime(string $value): string
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>BeanPrepared - Upcoming Events</title>
+  <link rel="icon" href="/Web/beanprepared/public/icon-512x512.png" sizes="512x512" type="image/png">
   <link
     href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
     rel="stylesheet"
@@ -85,7 +86,10 @@ function format_datetime(string $value): string
 <body>
   <nav class="navbar navbar-expand-lg bg-body-tertiary border-bottom">
     <div class="container">
-      <a class="navbar-brand fw-semibold" href="index.php">BeanPrepared</a>
+      <a class="navbar-brand fw-semibold d-flex align-items-center gap-2" href="index.php">
+        <img src="/Web/beanprepared/public/icon.png" alt="BeanPrepared" class="site-logo">
+        <span>BeanPrepared</span>
+      </a>
       <div class="navbar-nav">
         <a class="nav-link active" href="index.php">Upcoming Events</a>
         <a class="nav-link" href="submit.php">Submit Event</a>

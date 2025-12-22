@@ -5,13 +5,18 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
+    "icon": "./icon.png",
     "assetBundlePatterns": ["**/*"],
     "ios": {
       "bundleIdentifier": "com.beanprepared.app",
       "supportsTablet": true
     },
     "android": {
-      "package": "com.beanprepared.app"
+      "package": "com.beanprepared.app",
+      "adaptiveIcon": {
+        "foregroundImage": "./icon.png",
+        "backgroundColor": "#FFFFFF"
+      }
     }
   }
 }

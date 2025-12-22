@@ -13,6 +13,7 @@ import {
   Platform,
   KeyboardAvoidingView,
   RefreshControl,
+  ActivityIndicator,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { StatusBar } from "expo-status-bar";
@@ -24,6 +25,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { Calendar } from "react-native-calendars";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import Constants from "expo-constants";
+import { useFonts } from "expo-font";
 
 const DEFAULT_NOTIFICATION_TYPES = [
   { id: "general", label: "General Updates" },
@@ -61,6 +63,22 @@ export default function App() {
   const colorScheme = useColorScheme();
   const theme = getTheme(colorScheme);
   const styles = getStyles(theme);
+  const [fontTimedOut, setFontTimedOut] = useState(false);
+
+  const [fontsLoaded, fontError] = useFonts({
+    "DMSerifDisplay-Regular": require("./assets/fonts/DMSerifDisplay-Regular.ttf"),
+    "Manrope-Regular": require("./assets/fonts/Manrope-Regular.ttf"),
+    "Manrope-Medium": require("./assets/fonts/Manrope-Medium.ttf"),
+    "Manrope-SemiBold": require("./assets/fonts/Manrope-SemiBold.ttf"),
+    "Manrope-Bold": require("./assets/fonts/Manrope-Bold.ttf"),
+  });
+
+  useEffect(() => {
+    const timer = setTimeout(() => setFontTimedOut(true), 3000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  const showLoading = !fontsLoaded && !fontError && !fontTimedOut;
   const [notificationTypes, setNotificationTypes] = useState(
     DEFAULT_NOTIFICATION_TYPES
   );
@@ -422,6 +440,19 @@ export default function App() {
       setSubmitStatus("idle");
     }
   };
+
+  if (showLoading) {
+    return (
+      <SafeAreaProvider>
+        <SafeAreaView style={styles.container} edges={["top"]}>
+          <View style={styles.loadingScreen}>
+            <ActivityIndicator size="large" color={theme.accent} />
+            <Text style={styles.loadingText}>Loading BeanPrepared…</Text>
+          </View>
+        </SafeAreaView>
+      </SafeAreaProvider>
+    );
+  }
 
   return (
     <SafeAreaProvider>
@@ -1068,22 +1099,27 @@ const getTheme = (scheme) => {
   const isDark = scheme === "dark";
   return {
     statusBarStyle: isDark ? "light" : "dark",
-    background: isDark ? "#12100D" : "#F6F5F1",
-    surface: isDark ? "#1F1B16" : "#FFFFFF",
-    surfaceAlt: isDark ? "#1A1713" : "#F6F0DD",
-    textPrimary: isDark ? "#F7F2E8" : "#2E2A24",
-    textSecondary: isDark ? "#B8AE9E" : "#6A6256",
-    textMuted: isDark ? "#9B9285" : "#7A6E5B",
-    border: isDark ? "#2A241E" : "#EFEAE0",
-    accent: isDark ? "#E0B54C" : "#C9A227",
-    accentText: isDark ? "#1F1606" : "#1F1A12",
-    tagBackground: isDark ? "#2A2318" : "#F6F0DD",
-    tagText: isDark ? "#F1D48D" : "#7A5A00",
-    noteBackground: isDark ? "#2A2214" : "#FFF4D6",
-    noteText: isDark ? "#F4D38A" : "#6A4E00",
-    tabBar: isDark ? "#16130F" : "#FFFFFF",
-    tabActive: isDark ? "#F7E4B4" : "#2E2A24",
-    tabInactive: isDark ? "#8F8678" : "#8A7E6C",
+    background: isDark ? "#0E1B22" : "#EEF6F8",
+    surface: isDark ? "#142833" : "#FFFFFF",
+    surfaceAlt: isDark ? "#1B3440" : "#E9F7FB",
+    textPrimary: isDark ? "#E6F3F7" : "#1C2730",
+    textSecondary: isDark ? "#A7C0CC" : "#5B6B7A",
+    textMuted: isDark ? "#7FA3B2" : "#6B7C8A",
+    border: isDark ? "#23414D" : "#D8E7EE",
+    accent: isDark ? "#2DA7BE" : "#1E8FA5",
+    accentText: isDark ? "#061014" : "#FFFFFF",
+    tagBackground: isDark ? "#1C3A45" : "#DFF1F5",
+    tagText: isDark ? "#9DD5E0" : "#1C4D5A",
+    noteBackground: isDark ? "#1B3A46" : "#D8F0F6",
+    noteText: isDark ? "#B6E3EC" : "#1E5160",
+    tabBar: isDark ? "#10212A" : "#FFFFFF",
+    tabActive: isDark ? "#AEE3EE" : "#1C2730",
+    tabInactive: isDark ? "#6C93A3" : "#5B6B7A",
+    fontSerif: "DMSerifDisplay-Regular",
+    fontSans: "Manrope-Regular",
+    fontSansMedium: "Manrope-Medium",
+    fontSansSemi: "Manrope-SemiBold",
+    fontSansBold: "Manrope-Bold",
   };
 };
 
@@ -1097,72 +1133,78 @@ const getStyles = (theme) =>
       padding: 24,
       gap: 20,
     },
-    title: {
-      fontSize: 32,
-      fontWeight: "700",
-      color: theme.textPrimary,
-    },
-    subtitle: {
-      fontSize: 16,
-      color: theme.textSecondary,
-    },
-    section: {
-      backgroundColor: theme.surface,
-      borderRadius: 16,
-      padding: 16,
-      shadowColor: "#000",
-      shadowOpacity: 0.08,
-      shadowRadius: 10,
-      shadowOffset: { width: 0, height: 4 },
-      elevation: 2,
-    },
-    sectionTitle: {
-      fontSize: 18,
-      fontWeight: "600",
-      color: theme.textPrimary,
-      marginBottom: 12,
-    },
+  title: {
+    fontSize: 32,
+    fontWeight: "700",
+    color: theme.textPrimary,
+    fontFamily: theme.fontSerif,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: theme.textSecondary,
+    fontFamily: theme.fontSans,
+  },
+  section: {
+    backgroundColor: theme.surface,
+    borderRadius: 16,
+    padding: 16,
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 2,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: theme.textPrimary,
+    marginBottom: 12,
+    fontFamily: theme.fontSansSemi,
+  },
     row: {
       flexDirection: "row",
       justifyContent: "space-between",
       alignItems: "center",
       paddingVertical: 8,
     },
-    eventRow: {
-      flexDirection: "row",
-      justifyContent: "space-between",
-      alignItems: "center",
-      paddingVertical: 12,
-      borderBottomWidth: 1,
-      borderBottomColor: theme.border,
-    },
-    eventTitle: {
-      fontSize: 16,
-      fontWeight: "600",
-      color: theme.textPrimary,
-    },
-    eventMeta: {
-      fontSize: 13,
-      color: theme.textSecondary,
-      marginTop: 2,
-    },
+  eventRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.border,
+  },
+  eventTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: theme.textPrimary,
+    fontFamily: theme.fontSansSemi,
+  },
+  eventMeta: {
+    fontSize: 13,
+    color: theme.textSecondary,
+    marginTop: 2,
+    fontFamily: theme.fontSans,
+  },
     eventDescription: {
       fontSize: 13,
       color: theme.textSecondary,
       marginTop: 6,
       lineHeight: 18,
     },
-    eventTag: {
-      backgroundColor: theme.tagBackground,
-      paddingHorizontal: 10,
-      paddingVertical: 4,
-      borderRadius: 12,
-    },
-    eventTagText: {
-      fontSize: 12,
-      color: theme.tagText,
-      textTransform: "capitalize",
-    },
+  eventTag: {
+    backgroundColor: theme.tagBackground,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  eventTagText: {
+    fontSize: 12,
+    color: theme.tagText,
+    textTransform: "capitalize",
+    fontFamily: theme.fontSansSemi,
+  },
     header: {
       gap: 20,
     },
@@ -1172,12 +1214,13 @@ const getStyles = (theme) =>
     calendarSurface: {
       backgroundColor: theme.surface,
     },
-    calendarDate: {
-      fontSize: 14,
-      fontWeight: "600",
-      color: theme.textSecondary,
-      marginBottom: 8,
-    },
+  calendarDate: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: theme.textSecondary,
+    marginBottom: 8,
+    fontFamily: theme.fontSansSemi,
+  },
     calendarRow: {
       paddingVertical: 8,
       borderBottomWidth: 1,
@@ -1198,16 +1241,17 @@ const getStyles = (theme) =>
     calendarDot: {
       color: theme.accent,
     },
-    label: {
-      fontSize: 16,
-      color: theme.textPrimary,
-    },
-    segmentedControl: {
-      flexDirection: "row",
-      backgroundColor: theme.border,
-      borderRadius: 18,
-      padding: 4,
-    },
+  label: {
+    fontSize: 16,
+    color: theme.textPrimary,
+    fontFamily: theme.fontSans,
+  },
+  segmentedControl: {
+    flexDirection: "row",
+    backgroundColor: theme.surfaceAlt,
+    borderRadius: 18,
+    padding: 4,
+  },
     filterRow: {
       flexDirection: "row",
       flexWrap: "wrap",
@@ -1244,17 +1288,18 @@ const getStyles = (theme) =>
       borderRadius: 14,
       alignItems: "center",
     },
-    segmentButtonActive: {
-      backgroundColor: theme.surface,
-    },
-    segmentButtonText: {
-      fontSize: 14,
-      fontWeight: "600",
-      color: theme.textMuted,
-    },
-    segmentButtonTextActive: {
-      color: theme.textPrimary,
-    },
+  segmentButtonActive: {
+    backgroundColor: theme.surface,
+  },
+  segmentButtonText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: theme.textMuted,
+    fontFamily: theme.fontSansSemi,
+  },
+  segmentButtonTextActive: {
+    color: theme.textPrimary,
+  },
     input: {
       borderWidth: 1,
       borderColor: theme.border,
@@ -1298,50 +1343,66 @@ const getStyles = (theme) =>
     flex: {
       flex: 1,
     },
-    emptyState: {
-      backgroundColor: theme.surface,
-      borderRadius: 16,
-      padding: 24,
-      alignItems: "center",
-    },
-    emptyTitle: {
-      fontSize: 18,
-      fontWeight: "600",
-      color: theme.textPrimary,
-    },
-    emptyText: {
-      fontSize: 14,
-      color: theme.textSecondary,
-      marginTop: 6,
-      textAlign: "center",
-    },
+  emptyState: {
+    backgroundColor: theme.surface,
+    borderRadius: 16,
+    padding: 24,
+    alignItems: "center",
+  },
+  emptyTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: theme.textPrimary,
+    fontFamily: theme.fontSansSemi,
+  },
+  emptyText: {
+    fontSize: 14,
+    color: theme.textSecondary,
+    marginTop: 6,
+    textAlign: "center",
+    fontFamily: theme.fontSans,
+  },
     refreshTint: {
       color: theme.accent,
     },
-    button: {
-      backgroundColor: theme.accent,
-      paddingVertical: 14,
-      borderRadius: 30,
+    loadingScreen: {
+      flex: 1,
+      justifyContent: "center",
       alignItems: "center",
+      gap: 12,
     },
-    secondaryButton: {
-      backgroundColor: theme.surfaceAlt,
+    loadingText: {
+      color: theme.textSecondary,
+      fontSize: 15,
+      fontFamily: theme.fontSans,
     },
-    buttonText: {
-      color: theme.accentText,
-      fontWeight: "600",
-      fontSize: 16,
-    },
-    secondaryButtonText: {
-      color: theme.tagText,
-    },
-    note: {
-      backgroundColor: theme.noteBackground,
-      padding: 12,
-      borderRadius: 12,
-    },
-    noteText: {
-      color: theme.noteText,
-      fontSize: 13,
-    },
+  button: {
+    backgroundColor: theme.accent,
+    paddingVertical: 14,
+    borderRadius: 30,
+    alignItems: "center",
+  },
+  secondaryButton: {
+    backgroundColor: theme.surfaceAlt,
+  },
+  buttonText: {
+    color: theme.accentText,
+    fontWeight: "600",
+    fontSize: 16,
+    fontFamily: theme.fontSansBold,
+  },
+  secondaryButtonText: {
+    color: theme.tagText,
+    fontFamily: theme.fontSansBold,
+  },
+  note: {
+    backgroundColor: theme.noteBackground,
+    padding: 12,
+    borderRadius: 12,
+  },
+  noteText: {
+    color: theme.noteText,
+    fontSize: 13,
+    fontFamily: theme.fontSans,
+  },
   });

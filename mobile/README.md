@@ -61,3 +61,11 @@ php cron/send_notifications.php
 ### Notes
 - Push notifications won’t work in Expo Go.
 - Use UTC in the database.
+
+## Fonts
+This app expects the following font files in `mobile/assets/fonts/`:
+- `DMSerifDisplay-Regular.ttf`
+- `Manrope-Regular.ttf`
+- `Manrope-Medium.ttf`
+- `Manrope-SemiBold.ttf`
+- `Manrope-Bold.ttf`
