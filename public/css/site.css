@@ -169,6 +169,25 @@ body {
   color: var(--otr-muted);
 }
 
+.event-separator {
+  margin: 0 6px;
+  color: #7ea8b8;
+}
+
+.event-link {
+  margin-top: 8px;
+}
+
+.event-link a {
+  font-weight: 600;
+}
+
+.event-contact {
+  margin-top: 4px;
+  color: #2a5664;
+  font-size: 0.95rem;
+}
+
 .event-title {
   font-size: 1.6rem;
   font-weight: 700;

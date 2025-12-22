@@ -14,7 +14,7 @@ if ($windowFilter !== 'all' && !in_array($windowFilter, $windowOptions, true)) {
     $windowFilter = 'all';
 }
 
-$query = 'SELECT events.id, events.title, events.description, events.starts_at, notification_types.name AS type_name, notification_types.slug AS type_slug
+$query = 'SELECT events.id, events.title, events.description, events.starts_at, events.ends_at, events.website, events.organiser_email, events.organiser_phone, events.is_one_off, events.repeat_interval, events.repeat_unit, events.repeat_until, notification_types.name AS type_name, notification_types.slug AS type_slug
           FROM events
           JOIN notification_types ON events.notification_type_id = notification_types.id';
 $params = [];
@@ -22,28 +22,6 @@ $conditions = [];
 if ($typeFilter !== 'all') {
     $conditions[] = 'notification_types.slug = :slug';
     $params[':slug'] = $typeFilter;
-}
-if ($windowFilter !== 'all') {
-    $now = new DateTime();
-    $start = clone $now;
-    $end = clone $now;
-
-    if ($windowFilter === 'today') {
-        $start->setTime(0, 0, 0);
-        $end->setTime(23, 59, 59);
-    } elseif ($windowFilter === 'week') {
-        $day = (int) $start->format('N') - 1;
-        $start->modify('-' . $day . ' days')->setTime(0, 0, 0);
-        $end = clone $start;
-        $end->modify('+6 days')->setTime(23, 59, 59);
-    } elseif ($windowFilter === 'month') {
-        $start->modify('first day of this month')->setTime(0, 0, 0);
-        $end->modify('last day of this month')->setTime(23, 59, 59);
-    }
-
-    $conditions[] = 'events.starts_at BETWEEN :start AND :end';
-    $params[':start'] = $start->format('Y-m-d H:i:s');
-    $params[':end'] = $end->format('Y-m-d H:i:s');
 }
 if (count($conditions) > 0) {
     $query .= ' WHERE ' . implode(' AND ', $conditions);
@@ -67,6 +45,115 @@ function format_datetime(string $value): string
         return $value;
     }
 }
+
+function should_include_occurrence(DateTime $occurrence, ?DateTime $rangeStart, ?DateTime $rangeEnd): bool
+{
+    if ($rangeStart && $occurrence < $rangeStart) {
+        return false;
+    }
+    if ($rangeEnd && $occurrence > $rangeEnd) {
+        return false;
+    }
+    return true;
+}
+
+function next_occurrence(DateTime $current, int $interval, string $unit): DateTime
+{
+    $next = clone $current;
+    if ($unit === 'daily') {
+        $next->modify('+' . $interval . ' days');
+    } elseif ($unit === 'weekly') {
+        $next->modify('+' . $interval . ' weeks');
+    } else {
+        $next->modify('+' . $interval . ' months');
+    }
+    return $next;
+}
+
+function expand_events(array $events, ?DateTime $rangeStart = null, ?DateTime $rangeEnd = null, int $maxOccurrences = 5000): array
+{
+    $expanded = [];
+    foreach ($events as $event) {
+        $startsAt = new DateTime($event['starts_at']);
+        $endsAt = !empty($event['ends_at']) ? new DateTime($event['ends_at']) : null;
+        $durationSeconds = $endsAt ? ($endsAt->getTimestamp() - $startsAt->getTimestamp()) : null;
+        $isOneOff = isset($event['is_one_off']) ? ((int) $event['is_one_off'] === 1) : true;
+        $repeatInterval = (int) ($event['repeat_interval'] ?? 0);
+        $repeatUnit = $event['repeat_unit'] ?? '';
+        $repeatUntilRaw = $event['repeat_until'] ?? '';
+
+        if ($isOneOff || $repeatInterval < 1 || $repeatUnit === '' || $repeatUntilRaw === '') {
+            if (should_include_occurrence($startsAt, $rangeStart, $rangeEnd)) {
+                $expanded[] = $event;
+            }
+            continue;
+        }
+
+        $repeatUntil = new DateTime($repeatUntilRaw . ' 23:59:59');
+        $occurrence = clone $startsAt;
+        $count = 0;
+        while ($occurrence <= $repeatUntil && $count < $maxOccurrences) {
+            if ($rangeEnd && $occurrence > $rangeEnd) {
+                break;
+            }
+            if (should_include_occurrence($occurrence, $rangeStart, $rangeEnd)) {
+                $item = $event;
+                $item['id'] = $event['id'] . '-' . $occurrence->format('YmdHis');
+                $item['starts_at'] = $occurrence->format('Y-m-d H:i:s');
+                if ($durationSeconds !== null) {
+                    $occurrenceEnd = clone $occurrence;
+                    $occurrenceEnd->modify('+' . $durationSeconds . ' seconds');
+                    $item['ends_at'] = $occurrenceEnd->format('Y-m-d H:i:s');
+                }
+                $expanded[] = $item;
+            }
+            $occurrence = next_occurrence($occurrence, $repeatInterval, $repeatUnit);
+            $count += 1;
+        }
+    }
+    return $expanded;
+}
+
+$repeatLabels = [];
+foreach ($events as $event) {
+    $isOneOff = isset($event['is_one_off']) ? ((int) $event['is_one_off'] === 1) : true;
+    if ($isOneOff) {
+        $repeatLabels[(string) $event['id']] = '';
+        continue;
+    }
+    $interval = (int) ($event['repeat_interval'] ?? 0);
+    $unit = $event['repeat_unit'] ?? '';
+    $until = $event['repeat_until'] ?? '';
+    if ($interval < 1 || $unit === '' || $until === '') {
+        $repeatLabels[(string) $event['id']] = 'Repeats';
+        continue;
+    }
+    $labelUnit = $interval === 1 ? $unit : $unit . 's';
+    $repeatLabels[(string) $event['id']] = 'Repeats every ' . $interval . ' ' . $labelUnit . ' until ' . $until;
+}
+
+$rangeStart = null;
+$rangeEnd = null;
+if ($windowFilter !== 'all') {
+    $now = new DateTime();
+    $rangeStart = clone $now;
+    $rangeEnd = clone $now;
+
+    if ($windowFilter === 'today') {
+        $rangeStart->setTime(0, 0, 0);
+        $rangeEnd->setTime(23, 59, 59);
+    } elseif ($windowFilter === 'week') {
+        $day = (int) $rangeStart->format('N') - 1;
+        $rangeStart->modify('-' . $day . ' days')->setTime(0, 0, 0);
+        $rangeEnd = clone $rangeStart;
+        $rangeEnd->modify('+6 days')->setTime(23, 59, 59);
+    } elseif ($windowFilter === 'month') {
+        $rangeStart->modify('first day of this month')->setTime(0, 0, 0);
+        $rangeEnd->modify('last day of this month')->setTime(23, 59, 59);
+    }
+}
+$events = expand_events($events, $rangeStart, $rangeEnd);
+usort($events, static fn ($a, $b) => strcmp($a['starts_at'], $b['starts_at']));
 
 ?><!doctype html>
 <html lang="en">
@@ -160,15 +247,48 @@ function format_datetime(string $value): string
             <div class="col-12">
               <article class="card shadow-sm event-card event-card-compact" data-title="<?php echo h(strtolower($event['title'])); ?>" data-description="<?php echo h(strtolower($event['description'] ?? '')); ?>">
                 <div class="card-body">
-                  <div class="event-meta"><?php echo h(format_datetime($event['starts_at'])); ?></div>
+                  <div class="event-meta">
+                    <?php echo h(format_datetime($event['starts_at'])); ?>
+                    <?php if (!empty($event['ends_at'])): ?>
+                      <span class="event-separator">•</span>
+                      <?php echo h(format_datetime($event['ends_at'])); ?>
+                    <?php endif; ?>
+                  </div>
                   <h2 class="h5 mb-2 event-title">
                     <?php echo h($event['title']); ?>
                     <span class="badge text-bg-warning ms-2"><?php echo h($event['type_name']); ?></span>
                   </h2>
+                  <?php
+                    $repeatKey = (string) $event['id'];
+                    if (str_contains($repeatKey, '-')) {
+                        $repeatKey = strtok($repeatKey, '-');
+                    }
+                    $repeatLabel = $repeatLabels[$repeatKey] ?? '';
+                    if ($repeatLabel !== ''):
+                  ?>
+                    <div class="mb-2">
+                      <span class="badge text-bg-light border"><?php echo h($repeatLabel); ?></span>
+                    </div>
+                  <?php endif; ?>
                   <?php if (!empty($event['description'])): ?>
                     <p class="mb-0 event-description"><?php echo nl2br(h($event['description'])); ?></p>
                   <?php else: ?>
                     <p class="mb-0 text-muted">No description provided.</p>
+                  <?php endif; ?>
+                  <?php if (!empty($event['website'])): ?>
+                    <div class="event-link">
+                      <a href="<?php echo h($event['website']); ?>" target="_blank" rel="noreferrer">Event website</a>
+                    </div>
+                  <?php endif; ?>
+                  <?php if (!empty($event['organiser_email'])): ?>
+                    <div class="event-contact">
+                      Organiser email: <a href="mailto:<?php echo h($event['organiser_email']); ?>"><?php echo h($event['organiser_email']); ?></a>
+                    </div>
+                  <?php endif; ?>
+                  <?php if (!empty($event['organiser_phone'])): ?>
+                    <div class="event-contact">
+                      Organiser phone: <a href="tel:<?php echo h($event['organiser_phone']); ?>"><?php echo h($event['organiser_phone']); ?></a>
+                    </div>
                   <?php endif; ?>
                 </div>
               </article>
@@ -237,6 +357,11 @@ function format_datetime(string $value): string
             'title' => $event['title'],
             'description' => $event['description'],
             'starts_at' => $event['starts_at'],
+            'ends_at' => $event['ends_at'],
+            'website' => $event['website'],
+            'organiser_email' => $event['organiser_email'],
+            'organiser_phone' => $event['organiser_phone'],
+            'repeat_label' => $repeatLabels[str_contains((string) $event['id'], '-') ? strtok((string) $event['id'], '-') : (string) $event['id']] ?? '',
             'type_name' => $event['type_name'],
             'type_slug' => $event['type_slug'],
         ];
@@ -385,7 +510,15 @@ function format_datetime(string $value): string
       selectedDateEvents.innerHTML = items.map((eventItem) => {
         const time = new Date(eventItem.starts_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         const description = eventItem.description ? `<div class="text-muted small">${eventItem.description}</div>` : '';
-        return `<div class="event-card event-card-compact mb-3"><div class="event-meta">${time}</div><div class="event-title">${eventItem.title} <span class="badge text-bg-warning">${eventItem.type_name}</span></div>${description}</div>`;
+        const endTime = eventItem.ends_at
+          ? new Date(eventItem.ends_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+          : '';
+        const timeLabel = endTime ? `${time} • ${endTime}` : time;
+        const repeat = eventItem.repeat_label ? `<div class="mb-2"><span class="badge text-bg-light border">${eventItem.repeat_label}</span></div>` : '';
+        const link = eventItem.website ? `<div class="event-link"><a href="${eventItem.website}" target="_blank" rel="noreferrer">Event website</a></div>` : '';
+        const email = eventItem.organiser_email ? `<div class="event-contact">Organiser email: <a href="mailto:${eventItem.organiser_email}">${eventItem.organiser_email}</a></div>` : '';
+        const phone = eventItem.organiser_phone ? `<div class="event-contact">Organiser phone: <a href="tel:${eventItem.organiser_phone}">${eventItem.organiser_phone}</a></div>` : '';
+        return `<div class="event-card event-card-compact mb-3"><div class="event-meta">${timeLabel}</div><div class="event-title">${eventItem.title} <span class="badge text-bg-warning">${eventItem.type_name}</span></div>${repeat}${description}${link}${email}${phone}</div>`;
       }).join('');
     }
 

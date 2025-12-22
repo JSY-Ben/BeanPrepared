@@ -38,6 +38,74 @@ function json_response(int $status, array $payload): void
     exit;
 }
 
+function should_include_occurrence(DateTime $occurrence, ?DateTime $rangeStart, ?DateTime $rangeEnd): bool
+{
+    if ($rangeStart && $occurrence < $rangeStart) {
+        return false;
+    }
+    if ($rangeEnd && $occurrence > $rangeEnd) {
+        return false;
+    }
+    return true;
+}
+
+function next_occurrence(DateTime $current, int $interval, string $unit): DateTime
+{
+    $next = clone $current;
+    if ($unit === 'daily') {
+        $next->modify('+' . $interval . ' days');
+    } elseif ($unit === 'weekly') {
+        $next->modify('+' . $interval . ' weeks');
+    } else {
+        $next->modify('+' . $interval . ' months');
+    }
+    return $next;
+}
+
+function expand_events(array $events, ?DateTime $rangeStart = null, ?DateTime $rangeEnd = null, int $maxOccurrences = 5000): array
+{
+    $expanded = [];
+    foreach ($events as $event) {
+        $startsAt = new DateTime($event['starts_at']);
+        $endsAt = !empty($event['ends_at']) ? new DateTime($event['ends_at']) : null;
+        $durationSeconds = $endsAt ? ($endsAt->getTimestamp() - $startsAt->getTimestamp()) : null;
+        $isOneOff = isset($event['is_one_off']) ? ((int) $event['is_one_off'] === 1) : true;
+        $repeatInterval = (int) ($event['repeat_interval'] ?? 0);
+        $repeatUnit = $event['repeat_unit'] ?? '';
+        $repeatUntilRaw = $event['repeat_until'] ?? '';
+
+        if ($isOneOff || $repeatInterval < 1 || $repeatUnit === '' || $repeatUntilRaw === '') {
+            if (should_include_occurrence($startsAt, $rangeStart, $rangeEnd)) {
+                $expanded[] = $event;
+            }
+            continue;
+        }
+
+        $repeatUntil = new DateTime($repeatUntilRaw . ' 23:59:59');
+        $occurrence = clone $startsAt;
+        $count = 0;
+        while ($occurrence <= $repeatUntil && $count < $maxOccurrences) {
+            if ($rangeEnd && $occurrence > $rangeEnd) {
+                break;
+            }
+            if (should_include_occurrence($occurrence, $rangeStart, $rangeEnd)) {
+                $item = $event;
+                $item['id'] = $event['id'] . '-' . $occurrence->format('YmdHis');
+                $item['starts_at'] = $occurrence->format('Y-m-d H:i:s');
+                if ($durationSeconds !== null) {
+                    $occurrenceEnd = clone $occurrence;
+                    $occurrenceEnd->modify('+' . $durationSeconds . ' seconds');
+                    $item['ends_at'] = $occurrenceEnd->format('Y-m-d H:i:s');
+                }
+                $expanded[] = $item;
+            }
+            $occurrence = next_occurrence($occurrence, $repeatInterval, $repeatUnit);
+            $count += 1;
+        }
+    }
+    return $expanded;
+}
+
 try {
     if ($method === 'GET' && $path === '/api/notification-types') {
         $stmt = db()->query('SELECT id, slug, name, description FROM notification_types ORDER BY id');
@@ -45,8 +113,10 @@ try {
     }
 
     if ($method === 'GET' && $path === '/api/events') {
-        $stmt = db()->query('SELECT events.id, events.title, events.description, events.starts_at, notification_types.slug AS type_slug FROM events JOIN notification_types ON events.notification_type_id = notification_types.id ORDER BY events.starts_at');
-        json_response(200, ['data' => $stmt->fetchAll()]);
+        $stmt = db()->query('SELECT events.id, events.title, events.description, events.starts_at, events.ends_at, events.website, events.organiser_email, events.organiser_phone, events.is_one_off, events.repeat_interval, events.repeat_unit, events.repeat_until, notification_types.slug AS type_slug FROM events JOIN notification_types ON events.notification_type_id = notification_types.id ORDER BY events.starts_at');
+        $events = expand_events($stmt->fetchAll());
+        usort($events, static fn ($a, $b) => strcmp($a['starts_at'], $b['starts_at']));
+        json_response(200, ['data' => $events]);
     }
 
     if ($method === 'GET' && $path === '/api/event-submissions') {
@@ -138,11 +208,28 @@ try {
         $input = json_input();
         $title = trim($input['title'] ?? '');
         $startsAt = trim($input['starts_at'] ?? '');
+        $endsAt = trim($input['ends_at'] ?? '');
+        $website = trim($input['website'] ?? '');
+        $organiserEmail = trim($input['organiser_email'] ?? '');
+        $organiserPhone = trim($input['organiser_phone'] ?? '');
+        $isOneOff = $input['is_one_off'] ?? true;
+        $repeatInterval = isset($input['repeat_interval']) ? (int) $input['repeat_interval'] : null;
+        $repeatUnit = trim($input['repeat_unit'] ?? '');
+        $repeatUntil = trim($input['repeat_until'] ?? '');
         $typeSlug = trim($input['notification_type_slug'] ?? '');
         $description = trim($input['description'] ?? '');
 
-        if ($title === '' || $startsAt === '' || $typeSlug === '') {
-            json_response(422, ['error' => 'title, starts_at, and notification_type_slug are required']);
+        if ($title === '' || $startsAt === '' || $typeSlug === '' || !is_bool($isOneOff)) {
+            json_response(422, ['error' => 'title, starts_at, notification_type_slug, and is_one_off are required']);
+        }
+        if ($endsAt !== '' && strtotime($endsAt) <= strtotime($startsAt)) {
+            json_response(422, ['error' => 'ends_at must be after starts_at']);
+        }
+        if (!$isOneOff) {
+            $validUnits = ['daily', 'weekly', 'monthly'];
+            if ($repeatInterval === null || $repeatInterval < 1 || $repeatUnit === '' || !in_array($repeatUnit, $validUnits, true) || $repeatUntil === '') {
+                json_response(422, ['error' => 'repeat_interval, repeat_unit, and repeat_until are required for repeating events']);
+            }
         }
 
         $pdo = db();
@@ -154,11 +241,19 @@ try {
             json_response(404, ['error' => 'notification type not found']);
         }
 
-        $stmt = $pdo->prepare('INSERT INTO events (title, description, starts_at, notification_type_id) VALUES (:title, :description, :starts_at, :type_id)');
+        $stmt = $pdo->prepare('INSERT INTO events (title, description, starts_at, ends_at, website, organiser_email, organiser_phone, is_one_off, repeat_interval, repeat_unit, repeat_until, notification_type_id) VALUES (:title, :description, :starts_at, :ends_at, :website, :organiser_email, :organiser_phone, :is_one_off, :repeat_interval, :repeat_unit, :repeat_until, :type_id)');
         $stmt->execute([
             ':title' => $title,
             ':description' => $description ?: null,
             ':starts_at' => $startsAt,
+            ':ends_at' => $endsAt ?: null,
+            ':website' => $website ?: null,
+            ':organiser_email' => $organiserEmail ?: null,
+            ':organiser_phone' => $organiserPhone ?: null,
+            ':is_one_off' => $isOneOff ? 1 : 0,
+            ':repeat_interval' => $isOneOff ? null : $repeatInterval,
+            ':repeat_unit' => $isOneOff ? null : $repeatUnit,
+            ':repeat_until' => $isOneOff ? null : $repeatUntil,
             ':type_id' => $type['id'],
         ]);
 

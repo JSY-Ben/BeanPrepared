@@ -14,6 +14,7 @@ import {
   KeyboardAvoidingView,
   RefreshControl,
   ActivityIndicator,
+  Linking,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { StatusBar } from "expo-status-bar";
@@ -222,13 +223,17 @@ export default function App() {
         throw new Error("Failed to load events");
       }
       const payload = await response.json();
-      const mapped = (payload.data || []).map((event) => ({
-        id: String(event.id),
-        title: event.title,
-        description: event.description,
-        startsAt: event.starts_at,
-        type: event.type_slug,
-      }));
+        const mapped = (payload.data || []).map((event) => ({
+          id: String(event.id),
+          title: event.title,
+          description: event.description,
+          startsAt: event.starts_at,
+          endsAt: event.ends_at,
+          website: event.website,
+          organiserEmail: event.organiser_email,
+          organiserPhone: event.organiser_phone,
+          type: event.type_slug,
+        }));
       setEvents(mapped);
       setEventsStatus("loaded");
     } catch (error) {
@@ -308,6 +313,13 @@ export default function App() {
     await Promise.all([loadEvents(), loadNotificationTypes()]);
     setIsRefreshing(false);
   }, [loadEvents, loadNotificationTypes]);
+
+  const openLink = useCallback((url) => {
+    if (!url) {
+      return;
+    }
+    Linking.openURL(url).catch(() => {});
+  }, []);
 
   const toggleType = (id) => {
     setSelectedTypes((prev) => {
@@ -402,7 +414,7 @@ export default function App() {
     }
 
     if (submitForm.isOrganizer === null) {
-      Alert.alert("Missing info", "Please answer the organizer question.");
+      Alert.alert("Missing info", "Please answer the organiser question.");
       return;
     }
     if (submitForm.isOrganizer === true && submitForm.contactConsent === null) {
@@ -802,9 +814,43 @@ function MainScreen({
                       minute: "2-digit",
                     })}
                   </Text>
+                  {event.endsAt ? (
+                    <Text style={styles.eventMeta}>
+                      Ends{" "}
+                      {new Date(event.endsAt).toLocaleTimeString([], {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </Text>
+                  ) : null}
                   {event.description ? (
                     <Text style={styles.eventDescription}>
                       {event.description}
+                    </Text>
+                  ) : null}
+                  {event.website ? (
+                    <Text style={styles.eventLink}>{event.website}</Text>
+                  ) : null}
+                  {event.organiserEmail ? (
+                    <Text style={styles.eventContact}>
+                      Organiser email:{" "}
+                      <Text
+                        style={styles.eventLink}
+                        onPress={() => openLink(`mailto:${event.organiserEmail}`)}
+                      >
+                        {event.organiserEmail}
+                      </Text>
+                    </Text>
+                  ) : null}
+                  {event.organiserPhone ? (
+                    <Text style={styles.eventContact}>
+                      Organiser phone:{" "}
+                      <Text
+                        style={styles.eventLink}
+                        onPress={() => openLink(`tel:${event.organiserPhone}`)}
+                      >
+                        {event.organiserPhone}
+                      </Text>
                     </Text>
                   ) : null}
                 </View>
@@ -858,9 +904,39 @@ function MainScreen({
                   <Text style={styles.eventMeta}>
                     {new Date(event.startsAt).toLocaleString()}
                   </Text>
+                  {event.endsAt ? (
+                    <Text style={styles.eventMeta}>
+                      Ends {new Date(event.endsAt).toLocaleString()}
+                    </Text>
+                  ) : null}
                   {event.description ? (
                     <Text style={styles.eventDescription}>
                       {event.description}
+                    </Text>
+                  ) : null}
+                  {event.website ? (
+                    <Text style={styles.eventLink}>{event.website}</Text>
+                  ) : null}
+                  {event.organiserEmail ? (
+                    <Text style={styles.eventContact}>
+                      Organiser email:{" "}
+                      <Text
+                        style={styles.eventLink}
+                        onPress={() => openLink(`mailto:${event.organiserEmail}`)}
+                      >
+                        {event.organiserEmail}
+                      </Text>
+                    </Text>
+                  ) : null}
+                  {event.organiserPhone ? (
+                    <Text style={styles.eventContact}>
+                      Organiser phone:{" "}
+                      <Text
+                        style={styles.eventLink}
+                        onPress={() => openLink(`tel:${event.organiserPhone}`)}
+                      >
+                        {event.organiserPhone}
+                      </Text>
                     </Text>
                   ) : null}
                 </View>
@@ -1463,6 +1539,18 @@ const getStyles = (theme) =>
       color: theme.textSecondary,
       marginTop: 6,
       lineHeight: 18,
+    },
+    eventLink: {
+      marginTop: 6,
+      fontSize: 13,
+      color: theme.accent,
+      fontFamily: theme.fontSansMedium,
+    },
+    eventContact: {
+      marginTop: 4,
+      fontSize: 13,
+      color: theme.textSecondary,
+      fontFamily: theme.fontSans,
     },
   eventTag: {
     backgroundColor: theme.tagBackground,
