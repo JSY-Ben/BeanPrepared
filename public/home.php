@@ -33,6 +33,12 @@
   <main class="container py-4">
     <div class="section-card section-emphasis">
       <h1 class="mb-3">Welcome to BeanPrepared</h1>
+      <div class="gallery">
+        <img src="/Web/beanprepared/public/images/brett-jordan-5nCXtsF9lRg-unsplash.jpg" alt="Coastal evening light">
+        <img src="/Web/beanprepared/public/images/elisha-terada-_b4ppn1Ssgw-unsplash.jpg" alt="Calm shoreline">
+        <img src="/Web/beanprepared/public/images/jose-martin-ramirez-carrasco-45sjAjSjArQ-unsplash.jpg" alt="Quiet landscape">
+        <img src="/Web/beanprepared/public/images/travis-leery-vjiOM0bkWIM-unsplash.jpg" alt="Harbor view">
+      </div>
       <p class="brand-subtitle mb-4">
         BeanPrepared is designed for people who need a little more notice about what’s coming up in Jersey.
         Whether you live with PTSD, anxiety, autism, ADHD, or you care for someone who does, this app helps
@@ -48,12 +54,6 @@
         Download the app for iOS or Android to personalize your alerts and get notifications in time to
         prepare or make alternative plans.
       </p>
-      <div class="gallery">
-        <img src="/Web/beanprepared/public/images/brett-jordan-5nCXtsF9lRg-unsplash.jpg" alt="Coastal evening light">
-        <img src="/Web/beanprepared/public/images/elisha-terada-_b4ppn1Ssgw-unsplash.jpg" alt="Calm shoreline">
-        <img src="/Web/beanprepared/public/images/jose-martin-ramirez-carrasco-45sjAjSjArQ-unsplash.jpg" alt="Quiet landscape">
-        <img src="/Web/beanprepared/public/images/travis-leery-vjiOM0bkWIM-unsplash.jpg" alt="Harbor view">
-      </div>
       <div class="d-flex flex-wrap gap-3">
         <a class="btn btn-warning" href="https://example.com/ios" target="_blank" rel="noreferrer">Download on iOS</a>
         <a class="btn btn-outline-warning" href="https://example.com/android" target="_blank" rel="noreferrer">Get it on Android</a>
