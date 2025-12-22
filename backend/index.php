@@ -14,6 +14,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 $method = $_SERVER['REQUEST_METHOD'];
 $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+$basePath = '/Web/ontherock';
+if (strpos($path, $basePath) === 0) {
+    $path = substr($path, strlen($basePath));
+}
 $path = rtrim($path, '/');
 
 function json_input(): array
