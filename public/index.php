@@ -152,8 +152,8 @@ function format_datetime(string $value): string
         </div>
         <div class="row g-3" id="eventCards">
           <?php foreach ($events as $event): ?>
-            <div class="col-12 col-lg-8">
-              <article class="card shadow-sm event-card" data-title="<?php echo h(strtolower($event['title'])); ?>" data-description="<?php echo h(strtolower($event['description'] ?? '')); ?>">
+            <div class="col-12">
+              <article class="card shadow-sm event-card event-card-compact" data-title="<?php echo h(strtolower($event['title'])); ?>" data-description="<?php echo h(strtolower($event['description'] ?? '')); ?>">
                 <div class="card-body">
                   <div class="event-meta"><?php echo h(format_datetime($event['starts_at'])); ?></div>
                   <h2 class="h5 mb-2 event-title">
