@@ -1,0 +1,7 @@
+RewriteEngine On
+
+# Route API requests to the backend router
+RewriteRule ^api/(.*)$ /Web/ontherock/backend/index.php [L,QSA]
+
+# Default to the public site
+RewriteRule ^$ /Web/ontherock/public/index.php [L]
