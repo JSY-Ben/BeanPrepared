@@ -129,20 +129,6 @@ function format_datetime(string $value): string
         <?php endforeach; ?>
       </div>
     </div>
-    <div class="mb-4" id="dateFilters">
-      <div class="btn-group flex-wrap" role="group" aria-label="Filter by time window">
-        <a class="btn btn-sm <?php echo $windowFilter === 'all' ? 'btn-warning' : 'btn-outline-warning'; ?>" href="index.php<?php echo $typeFilter !== 'all' ? '?type=' . h($typeFilter) : ''; ?>">All dates</a>
-        <?php foreach ($windowOptions as $option): ?>
-          <?php
-            $label = $option === 'today' ? 'Today' : ($option === 'week' ? 'This Week' : 'This Month');
-            $queryString = 'type=' . h($typeFilter) . '&window=' . h($option);
-          ?>
-          <a class="btn btn-sm <?php echo $windowFilter === $option ? 'btn-warning' : 'btn-outline-warning'; ?>" href="index.php?<?php echo $queryString; ?>">
-            <?php echo h($label); ?>
-          </a>
-        <?php endforeach; ?>
-      </div>
-    </div>
     <div class="d-flex align-items-center justify-content-between mb-3">
       <div class="btn-group view-toggle" role="group" aria-label="View switch">
         <button class="btn btn-warning" id="viewListBtn" type="button">List</button>
@@ -155,6 +141,20 @@ function format_datetime(string $value): string
       <div class="alert alert-secondary">No events have been published yet.</div>
     <?php else: ?>
       <div id="listView">
+        <div class="mb-4" id="dateFilters">
+          <div class="btn-group flex-wrap" role="group" aria-label="Filter by time window">
+            <a class="btn btn-sm <?php echo $windowFilter === 'all' ? 'btn-warning' : 'btn-outline-warning'; ?>" href="index.php<?php echo $typeFilter !== 'all' ? '?type=' . h($typeFilter) : ''; ?>">All dates</a>
+            <?php foreach ($windowOptions as $option): ?>
+              <?php
+                $label = $option === 'today' ? 'Today' : ($option === 'week' ? 'This Week' : 'This Month');
+                $queryString = 'type=' . h($typeFilter) . '&window=' . h($option);
+              ?>
+              <a class="btn btn-sm <?php echo $windowFilter === $option ? 'btn-warning' : 'btn-outline-warning'; ?>" href="index.php?<?php echo $queryString; ?>">
+                <?php echo h($label); ?>
+              </a>
+            <?php endforeach; ?>
+          </div>
+        </div>
         <div class="row g-3">
           <?php foreach ($events as $event): ?>
             <div class="col-12 col-lg-8">
