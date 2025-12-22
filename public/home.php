@@ -36,8 +36,8 @@
       <p class="brand-subtitle mb-4">
         BeanPrepared is designed for people who need a little more notice about what’s coming up in Jersey.
         Whether you live with PTSD, anxiety, autism, ADHD, or you care for someone who does, this app helps
-        you plan ahead and avoid unexpected triggers. It’s also built for dog owners whose pets are anxious
-        or sensitive to noise.
+        you plan ahead and avoid unexpected triggers. It’s also built for pet owners and people caring for
+        animals (including farm animals) that may be anxious or sensitive to noise.
       </p>
       <p class="brand-subtitle mb-4">
         Check upcoming events and happenings that could involve loud sounds, crowds, fireworks, or other
