@@ -55,52 +55,7 @@ function h(string $value): string
     integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
     crossorigin="anonymous"
   >
-  <style>
-    :root {
-      --otr-ink: #2c261f;
-      --otr-muted: #6c6153;
-      --otr-paper: #f5f0e6;
-      --otr-card: #fffdf8;
-      --otr-gold: #c49a2f;
-      --otr-gold-strong: #b8871f;
-      --otr-border: #eadfca;
-      --otr-shadow: 0 12px 30px rgba(44, 38, 31, 0.12);
-    }
-    body {
-      background: radial-gradient(circle at top, #fbf7ef 0%, var(--otr-paper) 48%, #f2eadc 100%);
-      color: var(--otr-ink);
-    }
-    .navbar {
-      background: rgba(255, 253, 248, 0.95) !important;
-      backdrop-filter: blur(8px);
-    }
-    .card,
-    .table {
-      background: var(--otr-card);
-      border: 1px solid var(--otr-border);
-      box-shadow: var(--otr-shadow);
-    }
-    .btn-warning,
-    .btn-outline-warning {
-      border-radius: 999px;
-      font-weight: 700;
-    }
-    .btn-warning {
-      background: var(--otr-gold);
-      border-color: var(--otr-gold);
-      color: #1f1708;
-    }
-    .form-control,
-    .form-select {
-      border-radius: 12px;
-      border-color: var(--otr-border);
-      background: #fffdf8;
-    }
-    .badge.text-bg-warning {
-      background: #f6e3b0 !important;
-      color: #6a4c0e !important;
-    }
-  </style>
+  <link rel="stylesheet" href="css/admin.css">
 </head>
 <body>
   <nav class="navbar navbar-expand-lg bg-body-tertiary border-bottom">
