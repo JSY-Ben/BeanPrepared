@@ -87,6 +87,21 @@ function format_datetime(string $value): string
     .brand-subtitle {
       color: #6a6256;
     }
+    .view-toggle .btn {
+      min-width: 120px;
+      font-weight: 700;
+    }
+    .calendar-dot {
+      width: 8px;
+      height: 8px;
+      background: #f0a400;
+      border-radius: 999px;
+      margin: 4px auto 0;
+    }
+    .calendar-event {
+      background: #fff8e1;
+      box-shadow: inset 0 0 0 1px #f3c766;
+    }
   </style>
 </head>
 <body>
@@ -129,9 +144,9 @@ function format_datetime(string $value): string
       </div>
     </div>
     <div class="d-flex align-items-center justify-content-between mb-3">
-      <div class="btn-group" role="group" aria-label="View switch">
-        <button class="btn btn-sm btn-warning" id="viewListBtn" type="button">List</button>
-        <button class="btn btn-sm btn-outline-warning" id="viewCalendarBtn" type="button">Calendar</button>
+      <div class="btn-group view-toggle" role="group" aria-label="View switch">
+        <button class="btn btn-warning" id="viewListBtn" type="button">List</button>
+        <button class="btn btn-outline-warning" id="viewCalendarBtn" type="button">Calendar</button>
       </div>
       <div class="text-muted small" id="calendarMonthLabel"></div>
     </div>
@@ -275,7 +290,7 @@ function format_datetime(string $value): string
           const isCurrentMonth = cellDate.getMonth() === month;
           const hasEvents = Boolean(eventsByDate[dateKey]);
           const isSelected = selectedDate === dateKey;
-          html += `<td class="${isCurrentMonth ? '' : 'text-muted bg-light'} ${isSelected ? 'table-warning' : ''}" data-date="${dateKey}">${cellDate.getDate()}${hasEvents ? '<div class="text-warning">•</div>' : ''}</td>`;
+          html += `<td class="${isCurrentMonth ? '' : 'text-muted bg-light'} ${isSelected ? 'table-warning' : ''} ${hasEvents ? 'calendar-event' : ''}" data-date="${dateKey}">${cellDate.getDate()}${hasEvents ? '<div class="calendar-dot"></div>' : ''}</td>`;
           day += 1;
         }
         html += '</tr>';
