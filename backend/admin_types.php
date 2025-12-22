@@ -51,9 +51,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($action === 'delete') {
         $id = (int) ($_POST['id'] ?? 0);
         if ($id > 0) {
-            $stmt = $pdo->prepare('DELETE FROM notification_types WHERE id = :id');
-            $stmt->execute([':id' => $id]);
-            $success = 'Notification type deleted.';
+            try {
+                $stmt = $pdo->prepare('DELETE FROM notification_types WHERE id = :id');
+                $stmt->execute([':id' => $id]);
+                $success = 'Notification type deleted.';
+            } catch (PDOException $error) {
+                if ((int) ($error->errorInfo[1] ?? 0) === 1451) {
+                    $error = 'This type is used by existing events and cannot be deleted.';
+                } else {
+                    $error = 'Unable to delete this type right now.';
+                }
+            }
         }
     }
 }
