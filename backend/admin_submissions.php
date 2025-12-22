@@ -27,7 +27,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     exit;
 }
 
-$query = 'SELECT id, name, email, phone, starts_at, is_organizer, status, admin_notes, description, website, created_at FROM event_submissions';
+$query = 'SELECT id, name, email, phone, starts_at, ends_at, is_organizer, contact_consent, status, admin_notes, description, website, created_at FROM event_submissions';
 $params = [];
 if ($statusFilter !== 'all') {
     $query .= ' WHERE status = :status';
@@ -92,7 +92,9 @@ function h(string $value): string
             <th>Name</th>
             <th>Contact</th>
             <th>Event Time</th>
+            <th>End Time</th>
             <th>Organizer</th>
+            <th>Contact Consent</th>
             <th>Description</th>
             <th>Website</th>
             <th>Status / Notes</th>
@@ -113,10 +115,20 @@ function h(string $value): string
                 <?php endif; ?>
               </td>
               <td><?php echo h($submission['starts_at']); ?></td>
+              <td><?php echo h($submission['ends_at']); ?></td>
               <td>
                 <span class="badge text-bg-warning">
                   <?php echo $submission['is_organizer'] ? 'Yes' : 'No'; ?>
                 </span>
+              </td>
+              <td>
+                <?php if ($submission['is_organizer']): ?>
+                  <span class="badge text-bg-warning">
+                    <?php echo $submission['contact_consent'] ? 'Yes' : 'No'; ?>
+                  </span>
+                <?php else: ?>
+                  <span class="text-muted small">N/A</span>
+                <?php endif; ?>
               </td>
               <td><?php echo nl2br(h($submission['description'])); ?></td>
               <td>

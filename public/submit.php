@@ -10,23 +10,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email = trim($_POST['email'] ?? '');
     $phone = trim($_POST['phone'] ?? '');
     $startsAt = trim($_POST['starts_at'] ?? '');
+    $endsAt = trim($_POST['ends_at'] ?? '');
     $isOrganizer = ($_POST['is_organizer'] ?? '') === 'yes';
+    $contactConsent = ($_POST['contact_consent'] ?? '') === 'yes';
     $description = trim($_POST['description'] ?? '');
     $website = trim($_POST['website'] ?? '');
 
-    if ($name === '' || $email === '' || $startsAt === '' || $description === '') {
+    if ($name === '' || $email === '' || $startsAt === '' || $endsAt === '' || $description === '') {
         $error = 'Please fill all required fields.';
+    } elseif ($isOrganizer && empty($_POST['contact_consent'])) {
+        $error = 'Please confirm contact consent if you are running this event.';
     } else {
         $stmt = db()->prepare(
-            'INSERT INTO event_submissions (name, email, phone, starts_at, is_organizer, description, website)
-             VALUES (:name, :email, :phone, :starts_at, :is_organizer, :description, :website)'
+            'INSERT INTO event_submissions (name, email, phone, starts_at, ends_at, is_organizer, contact_consent, description, website)
+             VALUES (:name, :email, :phone, :starts_at, :ends_at, :is_organizer, :contact_consent, :description, :website)'
         );
         $stmt->execute([
             ':name' => $name,
             ':email' => $email,
             ':phone' => $phone ?: null,
             ':starts_at' => $startsAt,
+            ':ends_at' => $endsAt,
             ':is_organizer' => $isOrganizer ? 1 : 0,
+            ':contact_consent' => $isOrganizer ? ($contactConsent ? 1 : 0) : null,
             ':description' => $description,
             ':website' => $website ?: null,
         ]);
@@ -97,12 +103,24 @@ function h(string $value): string
           <label for="starts_at" class="form-label">Date/Time of Event *</label>
           <input id="starts_at" name="starts_at" type="datetime-local" class="form-control" required value="<?php echo h($_POST['starts_at'] ?? ''); ?>">
         </div>
+        <div class="col-md-6">
+          <label for="ends_at" class="form-label">End Date/Time *</label>
+          <input id="ends_at" name="ends_at" type="datetime-local" class="form-control" required value="<?php echo h($_POST['ends_at'] ?? ''); ?>">
+        </div>
         <div class="col-12">
           <label for="is_organizer" class="form-label">Are you running this event? *</label>
           <select id="is_organizer" name="is_organizer" class="form-select" required>
             <option value="" disabled <?php echo empty($_POST['is_organizer']) ? 'selected' : ''; ?>>Select...</option>
             <option value="yes" <?php echo ($_POST['is_organizer'] ?? '') === 'yes' ? 'selected' : ''; ?>>Yes</option>
             <option value="no" <?php echo ($_POST['is_organizer'] ?? '') === 'no' ? 'selected' : ''; ?>>No</option>
+          </select>
+        </div>
+        <div class="col-12 <?php echo ($_POST['is_organizer'] ?? '') === 'yes' ? '' : 'd-none'; ?>" id="consentSection">
+          <label for="contact_consent" class="form-label">Do you consent to making your contact details available to our users so they may contact you about the event? *</label>
+          <select id="contact_consent" name="contact_consent" class="form-select" <?php echo ($_POST['is_organizer'] ?? '') === 'yes' ? 'required' : ''; ?>>
+            <option value="" disabled <?php echo empty($_POST['contact_consent']) ? 'selected' : ''; ?>>Select...</option>
+            <option value="yes" <?php echo ($_POST['contact_consent'] ?? '') === 'yes' ? 'selected' : ''; ?>>Yes</option>
+            <option value="no" <?php echo ($_POST['contact_consent'] ?? '') === 'no' ? 'selected' : ''; ?>>No</option>
           </select>
         </div>
         <div class="col-12">
@@ -119,5 +137,19 @@ function h(string $value): string
       </div>
     </form>
   </main>
+  <script>
+    const organizerSelect = document.getElementById('is_organizer');
+    const consentSection = document.getElementById('consentSection');
+    const consentSelect = document.getElementById('contact_consent');
+    if (organizerSelect && consentSection) {
+      organizerSelect.addEventListener('change', (event) => {
+        const show = event.target.value === 'yes';
+        consentSection.classList.toggle('d-none', !show);
+        if (!show && consentSelect) {
+          consentSelect.value = '';
+        }
+      });
+    }
+  </script>
 </body>
 </html>

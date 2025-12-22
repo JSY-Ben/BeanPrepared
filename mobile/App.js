@@ -98,7 +98,9 @@ export default function App() {
     email: "",
     phone: "",
     startsAt: null,
+    endsAt: null,
     isOrganizer: null,
+    contactConsent: null,
     description: "",
     website: "",
   });
@@ -390,13 +392,17 @@ export default function App() {
       return;
     }
 
-    if (!submitForm.startsAt) {
-      Alert.alert("Missing info", "Please choose a date and time.");
+    if (!submitForm.startsAt || !submitForm.endsAt) {
+      Alert.alert("Missing info", "Please choose a start and end date/time.");
       return;
     }
 
     if (submitForm.isOrganizer === null) {
       Alert.alert("Missing info", "Please answer the organizer question.");
+      return;
+    }
+    if (submitForm.isOrganizer === true && submitForm.contactConsent === null) {
+      Alert.alert("Missing info", "Please answer the contact consent question.");
       return;
     }
 
@@ -410,7 +416,11 @@ export default function App() {
           email: submitForm.email.trim(),
           phone: submitForm.phone.trim(),
           starts_at: formatDateTime(submitForm.startsAt),
+          ends_at: formatDateTime(submitForm.endsAt),
           is_organizer: submitForm.isOrganizer,
+          contact_consent: submitForm.isOrganizer
+            ? submitForm.contactConsent
+            : null,
           description: submitForm.description.trim(),
           website: submitForm.website.trim(),
         }),
@@ -430,7 +440,9 @@ export default function App() {
         email: "",
         phone: "",
         startsAt: null,
+        endsAt: null,
         isOrganizer: null,
+        contactConsent: null,
         description: "",
         website: "",
       });
@@ -922,17 +934,30 @@ function SubmitEventScreen({
   updateSubmitForm,
   handleSubmitEvent,
 }) {
-  const [showDatePicker, setShowDatePicker] = useState(false);
-  const formattedDateTime = submitForm.startsAt
+  const [showStartPicker, setShowStartPicker] = useState(false);
+  const [showEndPicker, setShowEndPicker] = useState(false);
+  const formattedStart = submitForm.startsAt
     ? new Date(submitForm.startsAt).toLocaleString()
     : "";
+  const formattedEnd = submitForm.endsAt
+    ? new Date(submitForm.endsAt).toLocaleString()
+    : "";
 
-  const handleDateChange = (_event, selectedDate) => {
+  const handleStartChange = (_event, selectedDate) => {
     if (Platform.OS !== "ios") {
-      setShowDatePicker(false);
+      setShowStartPicker(false);
     }
     if (selectedDate) {
       updateSubmitForm("startsAt", selectedDate);
+    }
+  };
+
+  const handleEndChange = (_event, selectedDate) => {
+    if (Platform.OS !== "ios") {
+      setShowEndPicker(false);
+    }
+    if (selectedDate) {
+      updateSubmitForm("endsAt", selectedDate);
     }
   };
 
@@ -986,30 +1011,61 @@ function SubmitEventScreen({
           <Text style={styles.sectionTitle}>Date/Time of Event *</Text>
           <Pressable
             style={styles.input}
-            onPress={() => setShowDatePicker(true)}
+            onPress={() => setShowStartPicker(true)}
           >
             <Text
               style={
-                formattedDateTime
+                formattedStart
                   ? styles.inputText
                   : styles.inputPlaceholder
               }
             >
-              {formattedDateTime || "Select date and time"}
+              {formattedStart || "Select start date and time"}
             </Text>
           </Pressable>
-          {showDatePicker && (
+          {showStartPicker && (
             <View style={styles.datePickerContainer}>
               <DateTimePicker
                 value={submitForm.startsAt || new Date()}
                 mode="datetime"
                 display={Platform.OS === "ios" ? "spinner" : "default"}
-                onChange={handleDateChange}
+                onChange={handleStartChange}
               />
               {Platform.OS === "ios" && (
                 <Pressable
                   style={styles.datePickerDone}
-                  onPress={() => setShowDatePicker(false)}
+                  onPress={() => setShowStartPicker(false)}
+                >
+                  <Text style={styles.datePickerDoneText}>Done</Text>
+                </Pressable>
+              )}
+            </View>
+          )}
+          <Text style={styles.sectionTitle}>End Date/Time *</Text>
+          <Pressable
+            style={styles.input}
+            onPress={() => setShowEndPicker(true)}
+          >
+            <Text
+              style={
+                formattedEnd ? styles.inputText : styles.inputPlaceholder
+              }
+            >
+              {formattedEnd || "Select end date and time"}
+            </Text>
+          </Pressable>
+          {showEndPicker && (
+            <View style={styles.datePickerContainer}>
+              <DateTimePicker
+                value={submitForm.endsAt || submitForm.startsAt || new Date()}
+                mode="datetime"
+                display={Platform.OS === "ios" ? "spinner" : "default"}
+                onChange={handleEndChange}
+              />
+              {Platform.OS === "ios" && (
+                <Pressable
+                  style={styles.datePickerDone}
+                  onPress={() => setShowEndPicker(false)}
                 >
                   <Text style={styles.datePickerDoneText}>Done</Text>
                 </Pressable>
@@ -1019,13 +1075,13 @@ function SubmitEventScreen({
 
           <Text style={styles.sectionTitle}>Are you running this event? *</Text>
           <View style={styles.segmentedControl}>
-            <Pressable
-              style={[
-                styles.segmentButton,
-                submitForm.isOrganizer === true && styles.segmentButtonActive,
-              ]}
+              <Pressable
+                style={[
+                  styles.segmentButton,
+                  submitForm.isOrganizer === true && styles.segmentButtonActive,
+                ]}
               onPress={() => updateSubmitForm("isOrganizer", true)}
-            >
+              >
               <Text
                 style={[
                   styles.segmentButtonText,
@@ -1036,13 +1092,16 @@ function SubmitEventScreen({
                 Yes
               </Text>
             </Pressable>
-            <Pressable
-              style={[
-                styles.segmentButton,
-                submitForm.isOrganizer === false && styles.segmentButtonActive,
-              ]}
-              onPress={() => updateSubmitForm("isOrganizer", false)}
-            >
+              <Pressable
+                style={[
+                  styles.segmentButton,
+                  submitForm.isOrganizer === false && styles.segmentButtonActive,
+                ]}
+              onPress={() => {
+                updateSubmitForm("isOrganizer", false);
+                updateSubmitForm("contactConsent", null);
+              }}
+              >
               <Text
                 style={[
                   styles.segmentButtonText,
@@ -1055,6 +1114,53 @@ function SubmitEventScreen({
             </Pressable>
           </View>
           <View style={styles.fieldSpacer} />
+          {submitForm.isOrganizer === true ? (
+            <>
+              <Text style={styles.sectionTitle}>
+                Do you consent to making your contact details available to our
+                users so they may contact you about the event? *
+              </Text>
+              <View style={styles.segmentedControl}>
+                <Pressable
+                  style={[
+                    styles.segmentButton,
+                    submitForm.contactConsent === true &&
+                      styles.segmentButtonActive,
+                  ]}
+                  onPress={() => updateSubmitForm("contactConsent", true)}
+                >
+                  <Text
+                    style={[
+                      styles.segmentButtonText,
+                      submitForm.contactConsent === true &&
+                        styles.segmentButtonTextActive,
+                    ]}
+                  >
+                    Yes
+                  </Text>
+                </Pressable>
+                <Pressable
+                  style={[
+                    styles.segmentButton,
+                    submitForm.contactConsent === false &&
+                      styles.segmentButtonActive,
+                  ]}
+                  onPress={() => updateSubmitForm("contactConsent", false)}
+                >
+                  <Text
+                    style={[
+                      styles.segmentButtonText,
+                      submitForm.contactConsent === false &&
+                        styles.segmentButtonTextActive,
+                    ]}
+                  >
+                    No
+                  </Text>
+                </Pressable>
+              </View>
+              <View style={styles.fieldSpacer} />
+            </>
+          ) : null}
 
           <Text style={styles.sectionTitle}>
             Please give a short description of the event *

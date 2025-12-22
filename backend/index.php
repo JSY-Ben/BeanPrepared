@@ -50,7 +50,7 @@ try {
     }
 
     if ($method === 'GET' && $path === '/api/event-submissions') {
-        $stmt = db()->query('SELECT id, name, email, phone, starts_at, is_organizer, status, admin_notes, description, website, created_at FROM event_submissions ORDER BY created_at DESC');
+        $stmt = db()->query('SELECT id, name, email, phone, starts_at, ends_at, is_organizer, contact_consent, status, admin_notes, description, website, created_at FROM event_submissions ORDER BY created_at DESC');
         json_response(200, ['data' => $stmt->fetchAll()]);
     }
 
@@ -171,24 +171,31 @@ try {
         $email = trim($input['email'] ?? '');
         $phone = trim($input['phone'] ?? '');
         $startsAt = trim($input['starts_at'] ?? '');
+        $endsAt = trim($input['ends_at'] ?? '');
         $isOrganizer = $input['is_organizer'] ?? null;
+        $contactConsent = $input['contact_consent'] ?? null;
         $description = trim($input['description'] ?? '');
         $website = trim($input['website'] ?? '');
 
-        if ($name === '' || $email === '' || $startsAt === '' || $description === '' || !is_bool($isOrganizer)) {
-            json_response(422, ['error' => 'name, email, starts_at, description, and is_organizer are required']);
+        if ($name === '' || $email === '' || $startsAt === '' || $endsAt === '' || $description === '' || !is_bool($isOrganizer)) {
+            json_response(422, ['error' => 'name, email, starts_at, ends_at, description, and is_organizer are required']);
+        }
+        if ($isOrganizer && !is_bool($contactConsent)) {
+            json_response(422, ['error' => 'contact_consent is required when organizer is yes']);
         }
 
         $stmt = db()->prepare(
-            'INSERT INTO event_submissions (name, email, phone, starts_at, is_organizer, status, admin_notes, description, website)
-             VALUES (:name, :email, :phone, :starts_at, :is_organizer, :status, :admin_notes, :description, :website)'
+            'INSERT INTO event_submissions (name, email, phone, starts_at, ends_at, is_organizer, contact_consent, status, admin_notes, description, website)
+             VALUES (:name, :email, :phone, :starts_at, :ends_at, :is_organizer, :contact_consent, :status, :admin_notes, :description, :website)'
         );
         $stmt->execute([
             ':name' => $name,
             ':email' => $email,
             ':phone' => $phone ?: null,
             ':starts_at' => $startsAt,
+            ':ends_at' => $endsAt,
             ':is_organizer' => $isOrganizer ? 1 : 0,
+            ':contact_consent' => $contactConsent === null ? null : ($contactConsent ? 1 : 0),
             ':status' => 'pending',
             ':admin_notes' => null,
             ':description' => $description,
