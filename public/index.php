@@ -86,11 +86,12 @@ function format_datetime(string $value): string
 <body>
   <nav class="navbar navbar-expand-lg bg-body-tertiary border-bottom">
     <div class="container">
-      <a class="navbar-brand fw-semibold d-flex align-items-center gap-2" href="index.php">
+      <a class="navbar-brand fw-semibold d-flex align-items-center gap-2" href="home.php">
         <img src="/Web/beanprepared/public/icon.png" alt="BeanPrepared" class="site-logo">
         <span>BeanPrepared</span>
       </a>
       <div class="navbar-nav">
+        <a class="nav-link" href="home.php">Home</a>
         <a class="nav-link active" href="index.php">Upcoming Events</a>
         <a class="nav-link" href="submit.php">Submit Event</a>
       </div>

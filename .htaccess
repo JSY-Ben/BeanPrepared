@@ -7,5 +7,5 @@ RewriteBase /Web/beanprepared/
 RewriteRule ^api/?(.*)$ backend/index.php [L,QSA]
 
 # Optional friendly routes for the public site
-RewriteRule ^$ public/index.php [L]
+RewriteRule ^$ public/home.php [L]
 RewriteRule ^submit/?$ public/submit.php [L]
