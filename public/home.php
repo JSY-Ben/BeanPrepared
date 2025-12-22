@@ -34,15 +34,19 @@
     <div class="section-card section-emphasis">
       <h1 class="mb-3">Welcome to BeanPrepared</h1>
       <p class="brand-subtitle mb-4">
-        BeanPrepared is your home for everything happening in your community. From weekly gatherings
-        and special events to timely announcements, the app keeps you informed, prepared, and connected.
-        Explore the upcoming calendar, filter by the event types that matter to you, and submit new
-        event requests in seconds. Whether you’re planning ahead or looking for something to join today,
-        BeanPrepared brings the schedule to your fingertips.
+        BeanPrepared is designed for people who need a little more notice about what’s coming up in Jersey.
+        Whether you live with PTSD, anxiety, autism, ADHD, or you care for someone who does, this app helps
+        you plan ahead and avoid unexpected triggers. It’s also built for dog owners whose pets are anxious
+        or sensitive to noise.
       </p>
       <p class="brand-subtitle mb-4">
-        Download the app for iOS or Android to personalize your notifications, get reminders at the right
-        time, and never miss what matters most.
+        Check upcoming events and happenings that could involve loud sounds, crowds, fireworks, or other
+        potential triggers. Filter by the event types that matter to you, set reminders, and feel more in
+        control of your day.
+      </p>
+      <p class="brand-subtitle mb-4">
+        Download the app for iOS or Android to personalize your alerts and get notifications in time to
+        prepare or make alternative plans.
       </p>
       <div class="d-flex flex-wrap gap-3">
         <a class="btn btn-warning" href="https://example.com/ios" target="_blank" rel="noreferrer">Download on iOS</a>
