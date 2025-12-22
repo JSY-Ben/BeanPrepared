@@ -83,6 +83,10 @@ body {
   box-shadow: 0 14px 30px rgba(30, 143, 165, 0.12);
 }
 
+.section-emphasis {
+  padding: 20px;
+}
+
 .section-header {
   font-weight: 700;
   letter-spacing: 0.01em;

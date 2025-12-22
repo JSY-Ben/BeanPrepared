@@ -122,21 +122,20 @@ function format_datetime(string $value): string
       </div>
       <div class="search-help">Tip: search by title or description keywords.</div>
     </div>
-    <div class="mb-4 section-card">
-      <div class="d-flex align-items-center justify-content-between">
+    <div class="mb-4 section-card section-emphasis">
+      <div class="d-flex align-items-center justify-content-between mb-3">
         <div class="btn-group view-toggle" role="group" aria-label="View switch">
           <button class="btn btn-warning" id="viewListBtn" type="button">List</button>
           <button class="btn btn-outline-warning" id="viewCalendarBtn" type="button">Calendar</button>
         </div>
         <div class="text-muted small" id="calendarMonthLabel"></div>
       </div>
-    </div>
 
     <?php if (count($events) === 0): ?>
       <div class="alert alert-secondary">No events have been published yet.</div>
     <?php else: ?>
       <div id="listView">
-        <div class="mb-4 section-card" id="dateFilters">
+        <div class="mb-3" id="dateFilters">
           <div class="section-header">Filter by date window</div>
           <div class="filter-group" aria-label="Filter by time window">
             <a class="btn btn-sm <?php echo $windowFilter === 'all' ? 'btn-warning' : 'btn-outline-warning'; ?>" href="index.php<?php echo $typeFilter !== 'all' ? '?type=' . h($typeFilter) : ''; ?>">All dates</a>
@@ -208,6 +207,7 @@ function format_datetime(string $value): string
         </div>
       </div>
     <?php endif; ?>
+    </div>
   </main>
   <script>
     const listBtn = document.getElementById('viewListBtn');
