@@ -129,6 +129,11 @@ foreach ($events as $event) {
         continue;
     }
     $labelUnit = $interval === 1 ? $unit : $unit . 's';
+    try {
+        $untilDate = new DateTime($until);
+        $until = $untilDate->format('d/m/Y');
+    } catch (Throwable $error) {
+    }
     $repeatLabels[(string) $event['id']] = 'Repeats every ' . $interval . ' ' . $labelUnit . ' until ' . $until;
 }
 
@@ -223,9 +228,6 @@ usort($events, static fn ($a, $b) => strcmp($a['starts_at'], $b['starts_at']));
         <div class="text-muted small" id="calendarMonthLabel"></div>
       </div>
 
-    <?php if (count($events) === 0): ?>
-      <div class="alert alert-secondary">No events have been published yet.</div>
-    <?php else: ?>
       <div id="listView">
         <div class="mb-3" id="dateFilters">
           <div class="section-header">Filter by date window</div>
@@ -242,6 +244,9 @@ usort($events, static fn ($a, $b) => strcmp($a['starts_at'], $b['starts_at']));
             <?php endforeach; ?>
           </div>
         </div>
+        <?php if (count($events) === 0): ?>
+          <div class="alert alert-secondary" id="noEvents">No events have been published yet.</div>
+        <?php endif; ?>
         <div class="row g-3" id="eventCards">
           <?php foreach ($events as $event): ?>
             <div class="col-12">
@@ -331,7 +336,6 @@ usort($events, static fn ($a, $b) => strcmp($a['starts_at'], $b['starts_at']));
           </div>
         </div>
       </div>
-    <?php endif; ?>
     </div>
   </main>
   <script>
