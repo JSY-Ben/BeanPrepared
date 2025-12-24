@@ -19,12 +19,49 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt = db()->prepare('DELETE FROM event_submissions WHERE id = :id');
         $stmt->execute([':id' => $id]);
     } elseif ($id > 0 && in_array($status, $statusAllowed, true)) {
+        $stmt = db()->prepare('SELECT id, name, email, status FROM event_submissions WHERE id = :id');
+        $stmt->execute([':id' => $id]);
+        $submission = $stmt->fetch();
+
         $stmt = db()->prepare('UPDATE event_submissions SET status = :status, admin_notes = :admin_notes WHERE id = :id');
         $stmt->execute([
             ':status' => $status,
             ':admin_notes' => $notes === '' ? null : $notes,
             ':id' => $id,
         ]);
+
+        if ($submission && $submission['status'] !== $status && in_array($status, ['approved', 'rejected'], true)) {
+            $email = trim((string) ($submission['email'] ?? ''));
+            if ($email !== '' && filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                $from = trim((string) (getenv('SUBMISSIONS_FROM_EMAIL') ?: 'no-reply@beanprepared.local'));
+                $fromName = trim((string) (getenv('SUBMISSIONS_FROM_NAME') ?: 'BeanPrepared'));
+                $subject = $status === 'approved'
+                    ? 'Your BeanPrepared event submission is approved'
+                    : 'Your BeanPrepared event submission';
+
+                $greetingName = trim((string) ($submission['name'] ?? ''));
+                $greeting = $greetingName === '' ? 'Hi,' : 'Hi ' . $greetingName . ',';
+                $message = $status === 'approved'
+                    ? 'Thanks for submitting your event. It has been approved and will soon be included in the app.'
+                    : 'Thanks for submitting your event. This event is not appropriate for the app at this time.';
+
+                $body = implode("\r\n", [
+                    $greeting,
+                    '',
+                    $message,
+                    '',
+                    'BeanPrepared Team',
+                ]);
+
+                $headers = implode("\r\n", [
+                    'From: ' . $fromName . ' <' . $from . '>',
+                    'Reply-To: ' . $from,
+                    'Content-Type: text/plain; charset=UTF-8',
+                ]);
+
+                @mail($email, $subject, $body, $headers);
+            }
+        }
     }
 
     header('Location: admin_submissions.php?status=' . urlencode($statusFilter));
